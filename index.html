@@ -3,839 +3,605 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ventana Flotante de Videos</title>
+    <title>Slider de Videos de YouTube</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .slider-transition {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f0f0f;
-            color: #fff;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
+        .dot-active {
+            background-color: #EF4444 !important;
+            transform: scale(1.2);
+            transition: all 0.3s ease;
         }
-
-        /* Ventana flotante principal */
-        .floating-window {
-            position: fixed;
-            top: 50px;
-            left: 50px;
-            width: 420px;
-            height: 600px;
-            background: rgba(15, 15, 15, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8),
-                        0 0 0 1px rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            overflow: hidden;
-            z-index: 1000;
-            resize: both;
-            min-width: 350px;
-            min-height: 500px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        /* Barra de título - para arrastrar */
-        .window-header {
-            height: 50px;
-            background: linear-gradient(90deg, #ff0000, #cc0000);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            cursor: move;
-            user-select: none;
-            border-radius: 20px 20px 0 0;
-            position: relative;
-            z-index: 10;
-        }
-
-        .window-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-
-        .window-controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .window-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: none;
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            cursor: pointer;
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            transition: all 0.3s;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-
-        .window-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.1);
+        .video-item:hover .video-overlay {
+            opacity: 1;
         }
-
-        .close-btn:hover {
-            background: #ff4757;
-        }
-
-        /* Contenido de la ventana */
-        .window-content {
-            height: calc(100% - 50px);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        /* Player principal */
-        .main-player {
-            height: 250px;
-            background: #000;
-            position: relative;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .main-player iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 0;
-        }
-
-        /* Lista de videos con scroll */
-        .video-playlist {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: rgba(10, 10, 10, 0.8);
-        }
-
-        /* Estilos para scrollbar */
-        .video-playlist::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .video-playlist::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-        }
-
-        .video-playlist::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #ff0000, #cc0000);
-            border-radius: 4px;
-        }
-
-        /* Items de video */
-        .playlist-item {
+        .play-icon {
+            width: 60px;
+            height: 60px;
+            background: #EF4444;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            padding: 12px;
-            margin-bottom: 10px;
-            background: rgba(30, 30, 30, 0.8);
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        .video-item:hover .play-icon {
+            transform: scale(1);
+        }
+        .new-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #EF4444;
+            color: white;
+            padding: 4px 10px;
             border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-            position: relative;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
         }
-
-        .playlist-item:hover {
-            background: rgba(40, 40, 40, 0.9);
-            transform: translateX(5px);
-            border-color: rgba(255, 0, 0, 0.3);
-        }
-
-        .playlist-item.active {
-            background: linear-gradient(90deg, rgba(255, 0, 0, 0.2), rgba(204, 0, 0, 0.1));
-            border-color: #ff0000;
-        }
-
-        .video-thumb {
-            width: 80px;
-            height: 45px;
-            border-radius: 8px;
-            object-fit: cover;
-            margin-right: 15px;
-            flex-shrink: 0;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .video-info {
-            flex: 1;
-            min-width: 0;
-        }
-
         .video-title {
-            font-weight: 500;
-            font-size: 0.9em;
-            margin-bottom: 5px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            color: #fff;
         }
-
-        .video-date {
-            font-size: 0.75em;
-            color: #aaa;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .new-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: linear-gradient(90deg, #ff0000, #ff6b6b);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7em;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-        }
-
-        /* Controles flotantes */
-        .floating-controls {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            gap: 15px;
-            z-index: 1001;
-        }
-
-        .control-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff0000, #cc0000);
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.4);
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .control-btn:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 15px 40px rgba(255, 0, 0, 0.6);
-        }
-
-        .control-btn::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-
-        .control-btn:hover::after {
-            opacity: 1;
-        }
-
-        /* Notificaciones flotantes */
-        .floating-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(90deg, #00b09b, #96c93d);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            gap: 15px;
-            z-index: 1002;
-            max-width: 300px;
-            animation: slideInRight 0.5s ease;
-        }
-
-        /* Minimizado */
-        .window-minimized {
-            height: 50px !important;
-            width: 300px !important;
-            overflow: hidden;
-        }
-
-        .window-minimized .window-content {
-            display: none;
-        }
-
-        /* Animaciones */
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        /* Fondo con partículas */
-        #particles-js {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-
-        /* Instrucciones */
-        .instructions {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.8em;
-            z-index: 1001;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .floating-window {
-                width: calc(100vw - 40px);
-                height: calc(100vh - 100px);
-                top: 20px;
-                left: 20px;
-            }
-            
-            .control-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 18px;
-            }
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
         }
     </style>
 </head>
-<body>
-    <!-- Fondo con partículas -->
-    <div id="particles-js"></div>
-
-    <!-- Ventana flotante principal -->
-    <div class="floating-window" id="floatingWindow">
-        <div class="window-header" id="windowHeader">
-            <div class="window-title">
-                <span style="color: #ff0000">▶</span>
-                <span>Reproductor Flotante</span>
-                <span id="video-count" style="font-size: 0.8em; opacity: 0.7;">(0 videos)</span>
-            </div>
-            <div class="window-controls">
-                <button class="window-btn" id="minimizeBtn" title="Minimizar">─</button>
-                <button class="window-btn close-btn" id="closeBtn" title="Cerrar">×</button>
-            </div>
-        </div>
-        
-        <div class="window-content" id="windowContent">
-            <!-- Reproductor principal -->
-            <div class="main-player">
-                <iframe id="youtubePlayer"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen>
-                </iframe>
-            </div>
-            
-            <!-- Lista de videos -->
-            <div class="video-playlist" id="videoPlaylist">
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    Cargando videos...
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-10 fade-in">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                🎬 Videos del Canal
+            </h1>
+            <p class="text-gray-600 mb-4">
+                Slider automático que se actualiza con nuevos videos
+            </p>
+            <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span id="total-videos">Cargando...</span> videos
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Actualización automática</span>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Controles flotantes -->
-    <div class="floating-controls">
-        <button class="control-btn" id="prevBtn" data-tooltip="Anterior (←)">
-            ⏮️
-        </button>
-        <button class="control-btn" id="nextBtn" data-tooltip="Siguiente (→)">
-            ⏭️
-        </button>
-        <button class="control-btn" id="refreshBtn" data-tooltip="Actualizar (R)">
-            🔄
-        </button>
-        <button class="control-btn" id="pinBtn" data-tooltip="Siempre visible">
-            📌
-        </button>
-    </div>
+        <!-- Main Slider Container -->
+        <div class="flex flex-col items-center fade-in">
+            <div class="w-full max-w-4xl overflow-hidden relative rounded-2xl shadow-2xl">
+                <!-- Video Player Container -->
+                <div class="relative bg-black rounded-t-2xl">
+                    <div id="video-player-container" class="relative" style="padding-bottom: 56.25%;">
+                        <iframe 
+                            id="youtube-player"
+                            class="absolute top-0 left-0 w-full h-full rounded-t-2xl"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+                        <div id="player-loading" class="absolute inset-0 flex items-center justify-center bg-gray-900 rounded-t-2xl">
+                            <div class="text-white text-center">
+                                <div class="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                <p>Cargando video...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Info -->
+                    <div id="video-info" class="p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
+                        <h3 id="current-video-title" class="text-xl font-bold mb-1">Selecciona un video</h3>
+                        <div class="flex items-center justify-between text-sm text-gray-300">
+                            <span id="current-video-date">--</span>
+                            <span id="current-video-index" class="bg-red-500 px-3 py-1 rounded-full">0/0</span>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Notificación flotante -->
-    <div class="floating-notification" id="notification">
-        <span id="notificationText">¡Nuevo video disponible!</span>
-        <button onclick="closeNotification()" style="background:none; border:none; color:white; cursor:pointer;">✖</button>
-    </div>
+                <!-- Thumbnails Slider -->
+                <div class="bg-white p-4 rounded-b-2xl">
+                    <div class="relative">
+                        <!-- Navigation Buttons -->
+                        <button id="prev-btn" class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
+                            ←
+                        </button>
+                        <button id="next-btn" class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
+                            →
+                        </button>
+                        
+                        <!-- Thumbnails Container -->
+                        <div class="overflow-hidden px-2">
+                            <div class="flex slider-transition gap-3 py-2" id="thumbnails-slider">
+                                <!-- Thumbnails will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Instrucciones -->
-    <div class="instructions">
-        💡 Arrastra la ventana • Doble clic para maximizar/minimizar
+            <!-- Dot Indicators -->
+            <div class="flex items-center mt-6 space-x-3" id="dot-indicators">
+                <!-- Dots will be generated here -->
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-4 mt-6">
+                <button id="auto-play-toggle" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                    ⏯️ Auto-slide: <span id="auto-play-status">ON</span>
+                </button>
+                <button id="refresh-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2">
+                    🔄 Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>📡 Conectado a: <span class="font-mono text-gray-700">UC1T2hmhZojOKVts22YOZvrQ</span></p>
+            <p id="last-update" class="mt-1">Última actualización: --:--:--</p>
+        </div>
     </div>
 
     <script>
         // Configuración
         const CONFIG = {
             channelId: 'UC1T2hmhZojOKVts22YOZvrQ',
-            rssUrl: 'https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.youtube.com%2Ffeeds%2Fvideos.xml%3Fchannel_id%3DUC1T2hmhZojOKVts22YOZvrQ',
-            updateInterval: 120000, // 2 minutos
-            maxVideos: 20
+            maxVideos: 20,
+            autoSlideInterval: 5000, // 5 segundos
+            updateCheckInterval: 60000, // 1 minuto
+            slidesPerView: 5 // Cuántas miniaturas mostrar
         };
 
-        // Variables globales
+        // Estado
         let videos = [];
-        let currentVideoIndex = 0;
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-        let isMinimized = false;
-        let isPinned = false;
-        let lastVideoId = '';
+        let currentSlide = 0;
+        let autoSlideEnabled = true;
+        let autoSlideTimer;
+        let updateTimer;
+        let lastVideoCount = 0;
 
         // Elementos DOM
-        const floatingWindow = document.getElementById('floatingWindow');
-        const windowHeader = document.getElementById('windowHeader');
-        const youtubePlayer = document.getElementById('youtubePlayer');
-        const videoPlaylist = document.getElementById('videoPlaylist');
-        const videoCount = document.getElementById('videoCount');
-        const notification = document.getElementById('notification');
-        const notificationText = document.getElementById('notificationText');
+        const elements = {
+            slider: document.getElementById('thumbnails-slider'),
+            dotsContainer: document.getElementById('dot-indicators'),
+            player: document.getElementById('youtube-player'),
+            playerLoading: document.getElementById('player-loading'),
+            videoTitle: document.getElementById('current-video-title'),
+            videoDate: document.getElementById('current-video-date'),
+            videoIndex: document.getElementById('current-video-index'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn'),
+            autoPlayToggle: document.getElementById('auto-play-toggle'),
+            autoPlayStatus: document.getElementById('auto-play-status'),
+            refreshBtn: document.getElementById('refresh-btn'),
+            totalVideos: document.getElementById('total-videos'),
+            lastUpdate: document.getElementById('last-update')
+        };
 
-        // 1. Inicializar sistema de arrastre
-        function initDragSystem() {
-            windowHeader.addEventListener('mousedown', startDrag);
-            document.addEventListener('mousemove', handleDrag);
-            document.addEventListener('mouseup', stopDrag);
-            
-            // También para touch en móviles
-            windowHeader.addEventListener('touchstart', (e) => {
-                const touch = e.touches[0];
-                startDrag({
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-            });
-            
-            document.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-                const touch = e.touches[0];
-                handleDrag({
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-            });
-            
-            document.addEventListener('touchend', stopDrag);
-            
-            // Doble clic para minimizar/maximizar
-            windowHeader.addEventListener('dblclick', toggleMinimize);
+        // 1. Inicializar
+        async function init() {
+            await loadVideos();
+            setupEventListeners();
+            startAutoSlide();
+            startUpdateChecker();
         }
 
-        function startDrag(e) {
-            isDragging = true;
-            const rect = floatingWindow.getBoundingClientRect();
-            dragOffset = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            };
-            
-            floatingWindow.style.transition = 'none';
-            document.body.style.cursor = 'grabbing';
-            windowHeader.style.cursor = 'grabbing';
-        }
-
-        function handleDrag(e) {
-            if (!isDragging) return;
-            
-            let x = e.clientX - dragOffset.x;
-            let y = e.clientY - dragOffset.y;
-            
-            // Mantener dentro de los límites de la pantalla
-            const windowWidth = floatingWindow.offsetWidth;
-            const windowHeight = floatingWindow.offsetHeight;
-            
-            x = Math.max(0, Math.min(x, window.innerWidth - windowWidth));
-            y = Math.max(0, Math.min(y, window.innerHeight - windowHeight));
-            
-            floatingWindow.style.left = x + 'px';
-            floatingWindow.style.top = y + 'px';
-        }
-
-        function stopDrag() {
-            if (!isDragging) return;
-            isDragging = false;
-            floatingWindow.style.transition = 'all 0.3s ease';
-            document.body.style.cursor = 'default';
-            windowHeader.style.cursor = 'move';
-            
-            // Guardar posición
-            localStorage.setItem('windowPosition', JSON.stringify({
-                x: parseInt(floatingWindow.style.left),
-                y: parseInt(floatingWindow.style.top)
-            }));
-        }
-
-        // 2. Cargar videos
+        // 2. Cargar videos desde RSS
         async function loadVideos() {
             try {
                 showLoading(true);
                 
-                const response = await fetch(CONFIG.rssUrl);
+                const proxyUrl = 'https://api.allorigins.win/get?url=';
+                const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${CONFIG.channelId}`;
+                const encodedUrl = encodeURIComponent(rssUrl);
+                
+                const response = await fetch(proxyUrl + encodedUrl);
                 const data = await response.json();
                 
-                if (data.items && data.items.length > 0) {
-                    videos = data.items.slice(0, CONFIG.maxVideos).map(item => {
-                        // Extraer video ID de la URL
-                        const videoId = item.link.split('v=')[1]?.split('&')[0] || 
-                                      item.link.split('/').pop();
-                        
-                        return {
-                            id: videoId,
-                            title: item.title,
-                            thumbnail: item.thumbnail,
-                            published: item.pubDate,
-                            description: item.description,
-                            isNew: isVideoNew(item.pubDate)
-                        };
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                const entries = xmlDoc.getElementsByTagName('entry');
+                
+                videos = [];
+                for (let i = 0; i < Math.min(entries.length, CONFIG.maxVideos); i++) {
+                    const entry = entries[i];
+                    const videoId = entry.getElementsByTagName('yt:videoId')[0].textContent;
+                    const title = entry.getElementsByTagName('title')[0].textContent;
+                    const published = entry.getElementsByTagName('published')[0].textContent;
+                    
+                    videos.push({
+                        id: videoId,
+                        title: title,
+                        publishedAt: new Date(published),
+                        thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+                        isNew: isVideoNew(published),
+                        daysAgo: getDaysAgo(published)
                     });
-                    
-                    updatePlaylistUI();
-                    updateVideoCount();
-                    
-                    // Verificar nuevo video
-                    if (videos.length > 0) {
-                        const latestVideo = videos[0];
-                        
-                        if (lastVideoId && latestVideo.id !== lastVideoId) {
-                            showNotification(`🎬 Nuevo video: "${latestVideo.title}"`);
-                            
-                            // Si está en autoplay, cambiar al nuevo
-                            if (currentVideoIndex === 0) {
-                                playVideo(0);
-                            }
-                        }
-                        
-                        lastVideoId = latestVideo.id;
-                        
-                        // Si no hay video actual, reproducir el primero
-                        if (currentVideoIndex === -1) {
-                            playVideo(0);
-                        }
+                }
+                
+                // Verificar si hay nuevos videos
+                if (videos.length > 0 && videos[0].id !== lastVideoCount) {
+                    if (lastVideoCount > 0) {
+                        showNewVideoNotification(videos[0].title);
                     }
+                    lastVideoCount = videos[0].id;
+                }
+                
+                renderThumbnails();
+                updateDots();
+                updateStats();
+                
+                // Si es la primera carga, mostrar el primer video
+                if (videos.length > 0 && currentSlide === 0) {
+                    playVideo(0);
                 }
                 
                 showLoading(false);
+                updateLastUpdateTime();
                 
             } catch (error) {
                 console.error('Error cargando videos:', error);
-                videoPlaylist.innerHTML = `
-                    <div style="text-align: center; padding: 30px; color: #ff6b6b;">
-                        <p>Error cargando videos</p>
-                        <button onclick="loadVideos()" style="margin-top: 10px; padding: 8px 16px; background: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            Reintentar
-                        </button>
+                showError('Error al cargar videos. Reintentando...');
+                setTimeout(loadVideos, 3000);
+            }
+        }
+
+        // 3. Renderizar miniaturas
+        function renderThumbnails() {
+            elements.slider.innerHTML = '';
+            elements.dotsContainer.innerHTML = '';
+            
+            videos.forEach((video, index) => {
+                // Crear miniatura
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `flex-shrink-0 w-48 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 video-item ${
+                    index === currentSlide ? 'ring-2 ring-red-500 scale-105' : ''
+                }`;
+                thumbnail.style.flex = `0 0 ${100 / CONFIG.slidesPerView}%`;
+                thumbnail.style.maxWidth = `${100 / CONFIG.slidesPerView}%`;
+                
+                thumbnail.innerHTML = `
+                    <div class="relative">
+                        <img src="${video.thumbnail}" 
+                             alt="${video.title}" 
+                             class="w-full h-32 object-cover"
+                             loading="lazy"
+                             onerror="this.src='https://via.placeholder.com/192x108/EF4444/FFFFFF?text=Video'">
+                        ${video.isNew ? '<span class="new-badge">NUEVO</span>' : ''}
+                        <div class="video-overlay">
+                            <div class="play-icon">▶</div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white">
+                        <h4 class="video-title text-sm font-medium text-gray-900 mb-1">${video.title}</h4>
+                        <div class="flex justify-between items-center text-xs text-gray-500">
+                            <span>${video.daysAgo}</span>
+                            <span>#${index + 1}</span>
+                        </div>
                     </div>
                 `;
-            }
-        }
-
-        // 3. Actualizar lista de videos
-        function updatePlaylistUI() {
-            if (videos.length === 0) {
-                videoPlaylist.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No hay videos disponibles</div>';
-                return;
-            }
+                
+                thumbnail.addEventListener('click', () => playVideo(index));
+                elements.slider.appendChild(thumbnail);
+                
+                // Crear dot
+                const dot = document.createElement('span');
+                dot.className = `w-3 h-3 rounded-full cursor-pointer transition-all ${
+                    index === currentSlide ? 'dot-active bg-red-500' : 'bg-gray-300 hover:bg-gray-400'
+                }`;
+                dot.addEventListener('click', () => goToSlide(index));
+                elements.dotsContainer.appendChild(dot);
+            });
             
-            videoPlaylist.innerHTML = videos.map((video, index) => `
-                <div class="playlist-item ${index === currentVideoIndex ? 'active' : ''}" 
-                     onclick="playVideo(${index})"
-                     data-video-id="${video.id}">
-                    <img src="${video.thumbnail}" 
-                         alt="${video.title}" 
-                         class="video-thumb"
-                         loading="lazy"
-                         onerror="this.src='https://via.placeholder.com/80x45/333/fff?text=▶'">
-                    <div class="video-info">
-                        <div class="video-title">
-                            ${video.title}
-                            ${video.isNew ? '<span class="new-badge">NUEVO</span>' : ''}
-                        </div>
-                        <div class="video-date">
-                            ${formatDate(video.published)}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+            updateSliderPosition();
         }
 
-        // 4. Reproducir video
-        function playVideo(index) {
+        // 4. Navegación del slider
+        function goToSlide(index) {
             if (index < 0 || index >= videos.length) return;
             
-            currentVideoIndex = index;
+            currentSlide = index;
+            updateSliderPosition();
+            updateDots();
+            playVideo(index);
+            
+            // Reiniciar auto-slide
+            if (autoSlideEnabled) {
+                restartAutoSlide();
+            }
+        }
+
+        function updateSliderPosition() {
+            const slideWidth = 100 / CONFIG.slidesPerView;
+            const translateX = currentSlide * slideWidth;
+            elements.slider.style.transform = `translateX(-${translateX}%)`;
+            
+            // Actualizar miniaturas activas
+            document.querySelectorAll('.video-item').forEach((item, idx) => {
+                item.classList.toggle('ring-2', idx === currentSlide);
+                item.classList.toggle('ring-red-500', idx === currentSlide);
+                item.classList.toggle('scale-105', idx === currentSlide);
+            });
+        }
+
+        function updateDots() {
+            document.querySelectorAll('#dot-indicators span').forEach((dot, index) => {
+                dot.classList.toggle('dot-active', index === currentSlide);
+                dot.classList.toggle('bg-red-500', index === currentSlide);
+                dot.classList.toggle('bg-gray-300', !(index === currentSlide));
+            });
+        }
+
+        function nextSlide() {
+            const nextIndex = (currentSlide + 1) % videos.length;
+            goToSlide(nextIndex);
+        }
+
+        function prevSlide() {
+            const prevIndex = (currentSlide - 1 + videos.length) % videos.length;
+            goToSlide(prevIndex);
+        }
+
+        // 5. Reproducir video
+        function playVideo(index) {
+            if (!videos[index]) return;
+            
             const video = videos[index];
             
+            // Mostrar loading
+            elements.playerLoading.style.display = 'flex';
+            elements.player.style.opacity = '0';
+            
             // Actualizar iframe
-            youtubePlayer.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0&modestbranding=1&controls=1`;
+            elements.player.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0&modestbranding=1`;
             
-            // Actualizar UI
-            updatePlaylistUI();
+            // Actualizar información
+            elements.videoTitle.textContent = video.title;
+            elements.videoDate.textContent = formatFullDate(video.publishedAt);
+            elements.videoIndex.textContent = `${index + 1}/${videos.length}`;
             
-            // Scroll al video activo
-            const activeItem = document.querySelector('.playlist-item.active');
-            if (activeItem) {
-                activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Cuando el video cargue
+            elements.player.onload = () => {
+                elements.playerLoading.style.display = 'none';
+                elements.player.style.opacity = '1';
+            };
+        }
+
+        // 6. Auto-slide
+        function startAutoSlide() {
+            if (autoSlideEnabled) {
+                autoSlideTimer = setInterval(nextSlide, CONFIG.autoSlideInterval);
             }
+        }
+
+        function toggleAutoSlide() {
+            autoSlideEnabled = !autoSlideEnabled;
+            elements.autoPlayStatus.textContent = autoSlideEnabled ? 'ON' : 'OFF';
             
-            // Guardar último video visto
-            localStorage.setItem('lastVideoIndex', index);
-        }
-
-        // 5. Funciones de navegación
-        function playNextVideo() {
-            const nextIndex = (currentVideoIndex + 1) % videos.length;
-            playVideo(nextIndex);
-        }
-
-        function playPrevVideo() {
-            const prevIndex = (currentVideoIndex - 1 + videos.length) % videos.length;
-            playVideo(prevIndex);
-        }
-
-        // 6. Controles de ventana
-        function toggleMinimize() {
-            isMinimized = !isMinimized;
-            
-            if (isMinimized) {
-                floatingWindow.classList.add('window-minimized');
-                document.getElementById('minimizeBtn').textContent = '□';
-                document.getElementById('minimizeBtn').title = 'Maximizar';
+            if (autoSlideEnabled) {
+                startAutoSlide();
+                showNotification('Auto-slide activado');
             } else {
-                floatingWindow.classList.remove('window-minimized');
-                document.getElementById('minimizeBtn').textContent = '─';
-                document.getElementById('minimizeBtn').title = 'Minimizar';
+                clearInterval(autoSlideTimer);
+                showNotification('Auto-slide desactivado');
             }
         }
 
-        function togglePin() {
-            isPinned = !isPinned;
-            const pinBtn = document.getElementById('pinBtn');
+        function restartAutoSlide() {
+            clearInterval(autoSlideTimer);
+            if (autoSlideEnabled) {
+                startAutoSlide();
+            }
+        }
+
+        // 7. Verificación de actualizaciones
+        function startUpdateChecker() {
+            updateTimer = setInterval(async () => {
+                try {
+                    const proxyUrl = 'https://api.allorigins.win/get?url=';
+                    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${CONFIG.channelId}`;
+                    const encodedUrl = encodeURIComponent(rssUrl);
+                    
+                    const response = await fetch(proxyUrl + encodedUrl);
+                    const data = await response.json();
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+                    const entries = xmlDoc.getElementsByTagName('entry');
+                    
+                    if (entries.length > 0) {
+                        const latestVideoId = entries[0].getElementsByTagName('yt:videoId')[0].textContent;
+                        
+                        if (videos.length === 0 || videos[0].id !== latestVideoId) {
+                            console.log('Nuevo video detectado, actualizando...');
+                            await loadVideos();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error verificando actualizaciones:', error);
+                }
+            }, CONFIG.updateCheckInterval);
+        }
+
+        // 8. Event Listeners
+        function setupEventListeners() {
+            elements.prevBtn.addEventListener('click', prevSlide);
+            elements.nextBtn.addEventListener('click', nextSlide);
+            elements.autoPlayToggle.addEventListener('click', toggleAutoSlide);
+            elements.refreshBtn.addEventListener('click', loadVideos);
             
-            if (isPinned) {
-                floatingWindow.style.zIndex = '9999';
-                pinBtn.style.background = 'linear-gradient(135deg, #00b09b, #96c93d)';
-                pinBtn.textContent = '📍';
-                pinBtn.setAttribute('data-tooltip', 'Desfijar ventana');
-            } else {
-                floatingWindow.style.zIndex = '1000';
-                pinBtn.style.background = 'linear-gradient(135deg, #ff0000, #cc0000)';
-                pinBtn.textContent = '📌';
-                pinBtn.setAttribute('data-tooltip', 'Siempre visible');
+            // Teclado
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        prevSlide();
+                        break;
+                    case 'ArrowRight':
+                        nextSlide();
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        toggleAutoSlide();
+                        break;
+                }
+            });
+            
+            // Swipe en móvil
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            elements.slider.parentElement.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            elements.slider.parentElement.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        nextSlide(); // Swipe izquierda
+                    } else {
+                        prevSlide(); // Swipe derecha
+                    }
+                }
             }
         }
 
-        // 7. Funciones auxiliares
+        // 9. Funciones auxiliares
         function isVideoNew(publishedDate) {
             const published = new Date(publishedDate);
             const now = new Date();
             const daysDiff = (now - published) / (1000 * 60 * 60 * 24);
-            return daysDiff < 2; // Menos de 2 días = nuevo
+            return daysDiff < 7;
         }
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
+        function getDaysAgo(publishedDate) {
+            const published = new Date(publishedDate);
             const now = new Date();
-            const diffMs = now - date;
+            const diffMs = now - published;
             const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
             
-            if (diffDays === 0) {
-                return 'Hoy';
-            } else if (diffDays === 1) {
-                return 'Ayer';
-            } else if (diffDays < 7) {
-                return `Hace ${diffDays} días`;
-            } else {
-                return date.toLocaleDateString('es-ES', {
-                    day: 'numeric',
-                    month: 'short'
+            if (diffDays === 0) return 'Hoy';
+            if (diffDays === 1) return 'Ayer';
+            if (diffDays < 7) return `Hace ${diffDays} días`;
+            if (diffDays < 30) return `Hace ${Math.floor(diffDays/7)} semanas`;
+            return `Hace ${Math.floor(diffDays/30)} meses`;
+        }
+
+        function formatFullDate(date) {
+            return date.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function updateStats() {
+            elements.totalVideos.textContent = videos.length;
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            elements.lastUpdate.textContent = `Última actualización: ${timeStr}`;
+        }
+
+        function showNotification(message) {
+            // Crear notificación temporal
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg z-50 fade-in';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function showNewVideoNotification(title) {
+            showNotification(`🎬 ¡Nuevo video! "${title.substring(0, 50)}..."`);
+            
+            // Notificación del navegador
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("🎥 Nuevo Video en YouTube", {
+                    body: title,
+                    icon: videos[0]?.thumbnail
                 });
             }
         }
 
-        function updateVideoCount() {
-            videoCount.textContent = `(${videos.length} videos)`;
-        }
-
         function showLoading(show) {
             if (show) {
-                videoPlaylist.innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <div style="width: 40px; height: 40px; border: 3px solid #333; border-top-color: #ff0000; border-radius: 50%; margin: 0 auto 15px; animation: spin 1s linear infinite;"></div>
-                        <div style="color: #666;">Cargando videos...</div>
+                elements.slider.innerHTML = `
+                    <div class="flex w-full items-center justify-center py-12">
+                        <div class="text-center">
+                            <div class="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p class="text-gray-500">Cargando videos...</p>
+                        </div>
                     </div>
                 `;
             }
         }
 
-        function showNotification(message) {
-            notificationText.textContent = message;
-            notification.style.display = 'flex';
-            
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 5000);
+        function showError(message) {
+            elements.slider.innerHTML = `
+                <div class="flex w-full items-center justify-center py-12">
+                    <div class="text-center text-red-500">
+                        <p class="text-lg font-medium mb-2">⚠️ Error</p>
+                        <p class="mb-4">${message}</p>
+                        <button onclick="loadVideos()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                            Reintentar
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
-        function closeNotification() {
-            notification.style.display = 'none';
+        // 10. Inicializar notificaciones
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
         }
 
-        // 8. Event listeners
-        document.getElementById('minimizeBtn').addEventListener('click', toggleMinimize);
-        document.getElementById('closeBtn').addEventListener('click', () => {
-            if (confirm('¿Cerrar el reproductor?')) {
-                floatingWindow.style.display = 'none';
-            }
-        });
-        document.getElementById('refreshBtn').addEventListener('click', loadVideos);
-        document.getElementById('prevBtn').addEventListener('click', playPrevVideo);
-        document.getElementById('nextBtn').addEventListener('click', playNextVideo);
-        document.getElementById('pinBtn').addEventListener('click', togglePin);
-
-        // 9. Atajos de teclado
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            switch(e.key) {
-                case 'ArrowRight':
-                    playNextVideo();
-                    break;
-                case 'ArrowLeft':
-                    playPrevVideo();
-                    break;
-                case 'r':
-                case 'R':
-                    if (e.ctrlKey) break;
-                    loadVideos();
-                    break;
-                case 'm':
-                case 'M':
-                    toggleMinimize();
-                    break;
-                case 'Escape':
-                    toggleMinimize();
-                    break;
-            }
-        });
-
-        // 10. Inicializar
-        function init() {
-            // Cargar posición guardada
-            const savedPosition = localStorage.getItem('windowPosition');
-            if (savedPosition) {
-                const pos = JSON.parse(savedPosition);
-                floatingWindow.style.left = pos.x + 'px';
-                floatingWindow.style.top = pos.y + 'px';
-            }
-            
-            // Cargar último video visto
-            const lastIndex = localStorage.getItem('lastVideoIndex');
-            if (lastIndex) {
-                currentVideoIndex = parseInt(lastIndex);
-            }
-            
-            // Inicializar sistemas
-            initDragSystem();
-            loadVideos();
-            
-            // Actualizar periódicamente
-            setInterval(loadVideos, CONFIG.updateInterval);
-            
-            // Inicializar partículas (opcional)
-            initParticles();
-        }
-
-        // 11. Sistema de partículas (opcional)
-        function initParticles() {
-            if (typeof particlesJS !== 'undefined') {
-                particlesJS('particles-js', {
-                    particles: {
-                        number: { value: 30, density: { enable: true, value_area: 800 } },
-                        color: { value: "#ff0000" },
-                        shape: { type: "circle" },
-                        opacity: { value: 0.3, random: true },
-                        size: { value: 3, random: true },
-                        line_linked: {
-                            enable: true,
-                            distance: 150,
-                            color: "#ff0000",
-                            opacity: 0.1,
-                            width: 1
-                        },
-                        move: {
-                            enable: true,
-                            speed: 1,
-                            direction: "none",
-                            random: true,
-                            straight: false,
-                            out_mode: "out",
-                            bounce: false
-                        }
-                    },
-                    interactivity: {
-                        detect_on: "canvas",
-                        events: {
-                            onhover: { enable: true, mode: "repulse" },
-                            onclick: { enable: true, mode: "push" }
-                        }
-                    },
-                    retina_detect: true
-                });
-            }
-        }
-
-        // 12. Cargar script de partículas si no está cargado
-        if (typeof particlesJS === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';
-            script.onload = initParticles;
-            document.head.appendChild(script);
-        }
-
-        // Iniciar cuando el DOM esté listo
+        // 11. Iniciar aplicación
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
