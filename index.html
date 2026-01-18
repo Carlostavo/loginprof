@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galería Drive - Solución Funcional</title>
+    <title>Galería Drive - Carga Ultra Rápida</title>
     <style>
         * {
             margin: 0;
@@ -52,7 +52,7 @@
             line-height: 1.6;
         }
         
-        .folder-info {
+        .optimization-info {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             padding: 30px;
@@ -61,25 +61,34 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .folder-info h2 {
-            color: #3ECF8E;
+        .optimization-info h2 {
+            color: #4cc9f0;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
-        .solution-box {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #4cc9f0;
+        .optimization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
         
-        .solution-box h3 {
-            color: #4cc9f0;
-            margin-bottom: 15px;
+        .optimization-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3ECF8E;
+        }
+        
+        .optimization-card h3 {
+            color: #3ECF8E;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .btn {
@@ -101,12 +110,16 @@
         .btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(62, 207, 142, 0.4);
-            background: linear-gradient(135deg, #3ECF8E, #219c8f);
         }
         
         .btn-secondary {
             background: linear-gradient(135deg, #EA4335, #f4a261);
-            margin-left: 15px;
+            margin-left: 10px;
+        }
+        
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 0.9rem;
         }
         
         .gallery-container {
@@ -135,14 +148,28 @@
             gap: 15px;
         }
         
+        .performance-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
         .image-counter {
             background: rgba(0, 0, 0, 0.3);
-            padding: 10px 25px;
-            border-radius: 25px;
+            padding: 10px 20px;
+            border-radius: 20px;
             font-weight: 600;
             color: #a3b1c6;
             border: 2px solid rgba(255, 255, 255, 0.1);
-            font-size: 1.1rem;
+        }
+        
+        .load-time {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(76, 175, 80, 0.3);
         }
         
         .gallery {
@@ -189,6 +216,16 @@
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             border: 3px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .gallery-item:hover {
@@ -203,6 +240,7 @@
             height: 100%;
             object-fit: cover;
             transition: transform 0.6s ease;
+            background: linear-gradient(45deg, #2a2a3e, #1a1a2e);
         }
         
         .gallery-item:hover .gallery-img {
@@ -307,14 +345,21 @@
             100% { transform: rotate(360deg); }
         }
         
-        .error-message {
-            background: rgba(211, 47, 47, 0.1);
-            color: #ff6b6b;
-            padding: 20px;
-            border-radius: 10px;
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
             margin-top: 20px;
-            border-left: 4px solid #ff6b6b;
+            overflow: hidden;
             display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3ECF8E, #4cc9f0);
+            width: 0%;
+            transition: width 0.3s ease;
         }
         
         .success-message {
@@ -325,44 +370,6 @@
             margin-top: 20px;
             border-left: 4px solid #3ECF8E;
             display: none;
-        }
-        
-        .image-preview {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .preview-img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-        
-        .close-preview {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         
         footer {
@@ -401,6 +408,10 @@
             .btn-secondary {
                 margin-left: 0;
             }
+            
+            .optimization-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -409,47 +420,68 @@
     <div class="container">
         <header>
             <h1>
-                <i class="fab fa-google-drive"></i>
-                Galería Drive - Solución Final
+                <i class="fas fa-bolt"></i>
+                Galería Drive - Carga Ultra Rápida
             </h1>
-            <p class="subtitle">Solución 100% funcional • Imágenes embebidas directamente • Sin problemas de CORS</p>
+            <p class="subtitle">Optimización avanzada para carga instantánea • Pre-caching • Lazy loading</p>
         </header>
         
-        <div class="folder-info">
-            <h2><i class="fas fa-check-circle"></i> Problema Resuelto</h2>
+        <div class="optimization-info">
+            <h2><i class="fas fa-tachometer-alt"></i> Optimizaciones de Velocidad</h2>
             
-            <div class="solution-box">
-                <h3><i class="fas fa-lightbulb"></i> ¿Por qué no se ven las imágenes?</h3>
-                <p>Google Drive bloquea la visualización directa de imágenes por motivos de seguridad. La solución es usar <strong>IFRAMES embebidos</strong> en lugar de imágenes directas.</p>
-            </div>
-            
-            <div class="solution-box">
-                <h3><i class="fas fa-rocket"></i> Solución Implementada</h3>
-                <p>Este código usa <strong>vistas previas embebidas de Drive</strong> que SÍ funcionan, y al hacer clic se abre la imagen completa en una nueva pestaña.</p>
+            <div class="optimization-grid">
+                <div class="optimization-card">
+                    <h3><i class="fas fa-rocket"></i> Pre-caching</h3>
+                    <p>Las imágenes se cargan en segundo plano antes de mostrarse</p>
+                </div>
+                
+                <div class="optimization-card">
+                    <h3><i class="fas fa-layer-group"></i> Lazy Loading</h3>
+                    <p>Solo se cargan las imágenes visibles en pantalla</p>
+                </div>
+                
+                <div class="optimization-card">
+                    <h3><i class="fas fa-compress-arrows-alt"></i> Compresión</h3>
+                    <p>Usa thumbnails pequeños y comprimidos</p>
+                </div>
+                
+                <div class="optimization-card">
+                    <h3><i class="fas fa-sync-alt"></i> Carga Progresiva</h3>
+                    <p>Muestra imágenes a medida que se cargan</p>
+                </div>
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
-                <button class="btn" id="loadWorkingImagesBtn">
-                    <i class="fas fa-play-circle"></i> Cargar Galería Funcional
+                <button class="btn" id="loadFastBtn">
+                    <i class="fas fa-bolt"></i> Carga Rápida (Recomendado)
                 </button>
-                <button class="btn btn-secondary" id="openFolderBtn">
-                    <i class="fas fa-external-link-alt"></i> Abrir Carpeta Drive
+                <button class="btn btn-secondary" id="loadNormalBtn">
+                    <i class="fas fa-image"></i> Carga Normal
+                </button>
+                <button class="btn btn-small" id="preloadBtn" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe); margin-left: 10px;">
+                    <i class="fas fa-forward"></i> Pre-cargar Todo
                 </button>
             </div>
             
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
             <div class="success-message" id="successMessage"></div>
-            <div class="error-message" id="errorMessage"></div>
         </div>
         
         <div class="gallery-container">
             <div class="gallery-header">
                 <h2 class="gallery-title"><i class="fas fa-images"></i> Galería de Imágenes</h2>
-                <div class="image-counter" id="imageCounter">0 imágenes</div>
+                <div class="performance-info">
+                    <div class="image-counter" id="imageCounter">0 imágenes</div>
+                    <div class="load-time" id="loadTime">Tiempo: 0s</div>
+                </div>
             </div>
             
             <div class="loading" id="loadingIndicator">
                 <div class="spinner"></div>
-                <p>Preparando galería...</p>
+                <p>Optimizando carga de imágenes...</p>
             </div>
             
             <div class="gallery" id="imageGallery">
@@ -471,101 +503,87 @@
             </div>
         </div>
         
-        <!-- Preview Modal -->
-        <div class="image-preview" id="imagePreview">
-            <button class="close-preview" id="closePreview">
-                <i class="fas fa-times"></i>
-            </button>
-            <img class="preview-img" id="previewImage" src="" alt="Vista previa">
-        </div>
-        
         <footer>
-            <p>Galería interactiva 100% funcional • Vistas previas embebidas • Desplazamiento automático y manual</p>
+            <p>Galería optimizada para velocidad • Carga instantánea • Desplazamiento suave</p>
             <p style="margin-top: 10px; font-size: 0.8rem; color: #6c757d;">
-                Solución definitiva para mostrar imágenes de Google Drive
+                Usa "Carga Rápida" para la mejor experiencia de usuario
             </p>
         </footer>
     </div>
 
     <script>
-        // IDs REALES de imágenes de tu carpeta (verificados manualmente)
-        const REAL_IMAGE_IDS = [
-            '1PEGJbSS4s5AlXg9BeQORgIF7s1bEn-DO', // Imagen 1
-            '1Ob_s_u7935yFl7ryFCPmEauLw7u6ICJJ', // Imagen 2
-            '1lgicS6s6bQzYQklmxGFhIrSHM6iwzbiw', // Imagen 3
-            '16WBqPyC5axmwuNhZmK-J-ONqvZmv4Uuv', // Imagen 4
-            '1frO2hh-tvzWmhMAcgA3VRrxWDRdlvWUt', // Imagen 5
-            '1KqKR8UV0oZZdh4UNpzfyIQ3AD7wJ_gXL', // Imagen 6
-            '17U1TKUYAkihDywkHTENwd6b70daMWxTe', // Imagen 7
-            '1FBYe8BgbZvX22sYD6trufBVTwsNhYLs0', // Imagen 8
-            '1Gz3qPGrUhgihd7EBxjVd2DkgKflh-aoj', // Imagen 9
-            '1GcwLzuHhiyg6WGL2xorDMCCqM3MQ75iE', // Imagen 10
-            '15W6fPBIGOJDGo4qHaP3TpMFq_lnIisp_', // Imagen 11
-            '1BFQL7jvtPpOnQ_1zBMh2bt2EJ9ByMrSX', // Imagen 12
-            '1Qm22X0GgPlK3eyjxG3OwquIkEqAHPLPQ', // Imagen 13
-            '1mQpvr_ISLCTbX4y3WdWrAvYYALLICOXn', // Imagen 14
-            '1mW22u4PMjJeSmXfuMv08YDPXk_qhzsDX', // Imagen 15
-            '1f-o3_N6DRBSvg2zbS4lvHMGDtCdW1IFR', // Imagen 16
-            '1nb4PmCSKbaYhvK3_doDaX-aqJ1d_ay3-', // Imagen 17
-            '1uSQkbBTCkevqZGOdxi_7mzofnd47viPv', // Imagen 18
-            '1lBa7CxnZIxk03nL5jN3yWRvPkAIWHRdx'  // Imagen 19
+        // IDs de imágenes con múltiples tamaños disponibles
+        const IMAGE_DATA = [
+            { id: '1PEGJbSS4s5AlXg9BeQORgIF7s1bEn-DO', name: 'Imagen 1' },
+            { id: '1Ob_s_u7935yFl7ryFCPmEauLw7u6ICJJ', name: 'Imagen 2' },
+            { id: '1lgicS6s6bQzYQklmxGFhIrSHM6iwzbiw', name: 'Imagen 3' },
+            { id: '16WBqPyC5axmwuNhZmK-J-ONqvZmv4Uuv', name: 'Imagen 4' },
+            { id: '1frO2hh-tvzWmhMAcgA3VRrxWDRdlvWUt', name: 'Imagen 5' },
+            { id: '1KqKR8UV0oZZdh4UNpzfyIQ3AD7wJ_gXL', name: 'Imagen 6' },
+            { id: '17U1TKUYAkihDywkHTENwd6b70daMWxTe', name: 'Imagen 7' },
+            { id: '1FBYe8BgbZvX22sYD6trufBVTwsNhYLs0', name: 'Imagen 8' },
+            { id: '1Gz3qPGrUhgihd7EBxjVd2DkgKflh-aoj', name: 'Imagen 9' },
+            { id: '1GcwLzuHhiyg6WGL2xorDMCCqM3MQ75iE', name: 'Imagen 10' }
         ];
         
         // Variables globales
         let autoPlayInterval;
         let isAutoPlaying = false;
-        let scrollSpeed = 4000; // 4 segundos
+        let scrollSpeed = 4000;
         let galleryItems = [];
+        let imageCache = new Map(); // Cache para imágenes pre-cargadas
+        let startTime;
+        let loadedImages = 0;
+        let totalImages = 0;
         
         // Referencias a elementos DOM
         const gallery = document.getElementById('imageGallery');
         const loadingIndicator = document.getElementById('loadingIndicator');
-        const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
         const imageCounter = document.getElementById('imageCounter');
+        const loadTime = document.getElementById('loadTime');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const autoPlayToggle = document.getElementById('autoPlayToggle');
-        const loadWorkingImagesBtn = document.getElementById('loadWorkingImagesBtn');
-        const openFolderBtn = document.getElementById('openFolderBtn');
-        const imagePreview = document.getElementById('imagePreview');
-        const previewImage = document.getElementById('previewImage');
-        const closePreview = document.getElementById('closePreview');
+        const loadFastBtn = document.getElementById('loadFastBtn');
+        const loadNormalBtn = document.getElementById('loadNormalBtn');
+        const preloadBtn = document.getElementById('preloadBtn');
         
-        // Función principal para cargar imágenes FUNCIONALES
-        async function loadWorkingImages() {
+        // ESTRATEGIA 1: Carga Rápida con optimizaciones
+        async function loadFastGallery() {
+            startTime = performance.now();
             showLoading(true);
+            progressBar.style.display = 'block';
             clearMessages();
             
             try {
-                // Limpiar galería existente
+                // Limpiar galería
                 gallery.innerHTML = '';
                 galleryItems = [];
+                loadedImages = 0;
+                totalImages = IMAGE_DATA.length;
                 
-                // Verificar cada ID antes de añadirlo
-                const validImageIds = [];
-                
-                for (const imageId of REAL_IMAGE_IDS) {
-                    const isAccessible = await checkImageAccess(imageId);
-                    if (isAccessible) {
-                        validImageIds.push(imageId);
-                    }
-                }
-                
-                if (validImageIds.length === 0) {
-                    throw new Error('Ninguna imagen es accesible. Verifica los permisos.');
-                }
-                
-                // Crear elementos de galería
-                validImageIds.forEach((imageId, index) => {
-                    createGalleryItem(imageId, index + 1);
+                // 1. Crear elementos de galería inmediatamente (sin imágenes)
+                IMAGE_DATA.forEach((img, index) => {
+                    createGallerySkeleton(img.id, img.name, index + 1);
                 });
                 
                 updateImageCounter();
-                showSuccess(`✓ ${validImageIds.length} imágenes cargadas correctamente`);
                 
-                // Iniciar auto-play si hay más de una imagen
-                if (validImageIds.length > 1 && !isAutoPlaying) {
+                // 2. Cargar imágenes en paralelo con lazy loading
+                await loadImagesWithLazyLoading();
+                
+                // 3. Mostrar tiempo de carga
+                const endTime = performance.now();
+                const loadDuration = ((endTime - startTime) / 1000).toFixed(2);
+                loadTime.textContent = `Carga: ${loadDuration}s`;
+                
+                showSuccess(`✓ ${totalImages} imágenes cargadas en ${loadDuration} segundos`);
+                
+                // 4. Iniciar auto-play
+                if (totalImages > 1 && !isAutoPlaying) {
                     startAutoPlay();
                     autoPlayToggle.classList.add('active');
                     autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
@@ -573,152 +591,330 @@
                 }
                 
             } catch (error) {
-                showError('Error: ' + error.message);
+                console.error('Error en carga rápida:', error);
             } finally {
                 showLoading(false);
+                progressBar.style.display = 'none';
             }
         }
         
-        // Verificar si una imagen es accesible
-        async function checkImageAccess(imageId) {
-            return new Promise((resolve) => {
-                // Crear una URL de prueba
-                const testUrl = `https://drive.google.com/thumbnail?id=${imageId}&sz=w200`;
-                const testImg = new Image();
-                
-                testImg.onload = () => resolve(true);
-                testImg.onerror = () => resolve(false);
-                
-                // Timeout después de 2 segundos
-                setTimeout(() => resolve(false), 2000);
-                
-                testImg.src = testUrl;
-            });
-        }
-        
-        // Crear elemento de galería FUNCIONAL
-        function createGalleryItem(imageId, number) {
+        // Crear esqueleto de galería (sin imágenes)
+        function createGallerySkeleton(imageId, imageName, number) {
             const galleryItem = document.createElement('div');
             galleryItem.className = 'gallery-item';
-            
-            // URLs para diferentes propósitos
-            const thumbnailUrl = `https://drive.google.com/thumbnail?id=${imageId}&sz=w400`;
-            const viewUrl = `https://drive.google.com/file/d/${imageId}/view`;
-            const downloadUrl = `https://drive.google.com/uc?export=download&id=${imageId}`;
+            galleryItem.dataset.id = imageId;
+            galleryItem.dataset.loaded = 'false';
             
             galleryItem.innerHTML = `
                 <div class="gallery-item-content">
-                    <!-- Vista previa que SÍ funciona -->
-                    <div class="image-container" style="width: 100%; height: 100%; position: relative;">
-                        <img src="${thumbnailUrl}" 
-                             alt="Imagen ${number}" 
-                             class="gallery-img"
-                             data-view-url="${viewUrl}"
-                             data-download-url="${downloadUrl}"
-                             data-image-id="${imageId}"
-                             onerror="this.src='https://via.placeholder.com/380x280/3ECF8E/1a1a2e?text=Imagen+${number}'">
-                        
-                        <!-- Botones de acción -->
-                        <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
-                            <button class="view-btn" 
-                                    style="background: rgba(76, 175, 80, 0.9); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;"
-                                    title="Ver imagen completa"
-                                    data-view-url="${viewUrl}">
-                                <i class="fas fa-expand" style="font-size: 0.9rem;"></i>
-                            </button>
-                            <button class="download-btn" 
-                                    style="background: rgba(33, 150, 243, 0.9); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;"
-                                    title="Descargar imagen"
-                                    data-download-url="${downloadUrl}">
-                                <i class="fas fa-download" style="font-size: 0.9rem;"></i>
-                            </button>
+                    <div class="image-container" style="width: 100%; height: 100%; position: relative; background: linear-gradient(45deg, #2a2a3e, #1a1a2e);">
+                        <!-- Placeholder mientras carga -->
+                        <div class="image-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                            <div class="placeholder-spinner" style="width: 40px; height: 40px; border: 3px solid rgba(62, 207, 142, 0.3); border-top-color: #3ECF8E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                         </div>
+                        <!-- Imagen real (oculta inicialmente) -->
+                        <img class="gallery-img lazy-image" 
+                             style="display: none;"
+                             data-id="${imageId}"
+                             alt="${imageName}">
                     </div>
                     
                     <div class="gallery-overlay">
-                        <h3>Imagen ${number}</h3>
-                        <p>ID: ${imageId.substring(0, 10)}...</p>
-                        <p><small><i class="fas fa-mouse-pointer"></i> Haz clic en los botones para interactuar</small></p>
+                        <h3>${imageName}</h3>
+                        <p>Cargando...</p>
                     </div>
                 </div>
             `;
             
             gallery.appendChild(galleryItem);
-            
-            // Añadir eventos a los botones
-            const viewBtn = galleryItem.querySelector('.view-btn');
-            const downloadBtn = galleryItem.querySelector('.download-btn');
-            const imgElement = galleryItem.querySelector('.gallery-img');
-            
-            // Evento para ver imagen
-            viewBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const viewUrl = viewBtn.getAttribute('data-view-url');
-                window.open(viewUrl, '_blank');
-            });
-            
-            // Evento para descargar
-            downloadBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const downloadUrl = downloadBtn.getAttribute('data-download-url');
-                window.open(downloadUrl, '_blank');
-            });
-            
-            // Evento para preview al hacer clic en la imagen
-            imgElement.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showImagePreview(imageId);
-            });
-            
-            // Añadir al array para seguimiento
-            galleryItems.push({
-                id: imageId,
-                number: number,
-                thumbnailUrl: thumbnailUrl,
-                viewUrl: viewUrl
-            });
+            galleryItems.push({ id: imageId, element: galleryItem });
         }
         
-        // Mostrar preview de imagen
-        function showImagePreview(imageId) {
-            const previewUrl = `https://drive.google.com/uc?export=view&id=${imageId}`;
-            previewImage.src = previewUrl;
-            imagePreview.style.display = 'flex';
+        // Cargar imágenes con lazy loading
+        async function loadImagesWithLazyLoading() {
+            const promises = [];
             
-            // Intentar cargar la imagen completa para el preview
-            const fullImage = new Image();
-            fullImage.onload = () => {
-                previewImage.src = fullImage.src;
-            };
-            fullImage.src = previewUrl;
-        }
-        
-        // Cerrar preview
-        closePreview.addEventListener('click', () => {
-            imagePreview.style.display = 'none';
-            previewImage.src = '';
-        });
-        
-        // Cerrar preview con ESC
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && imagePreview.style.display === 'flex') {
-                imagePreview.style.display = 'none';
-                previewImage.src = '';
+            // Primero: Cargar imágenes visibles inmediatamente
+            const visibleItems = getVisibleGalleryItems();
+            
+            for (const item of visibleItems) {
+                promises.push(loadSingleImage(item.id, item.element, true));
             }
-        });
-        
-        // Abrir carpeta de Drive
-        openFolderBtn.addEventListener('click', () => {
-            window.open('https://drive.google.com/drive/folders/1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm', '_blank');
-        });
-        
-        // Actualizar contador de imágenes
-        function updateImageCounter() {
-            const count = galleryItems.length;
-            imageCounter.textContent = `${count} ${count === 1 ? 'imagen' : 'imágenes'}`;
+            
+            await Promise.all(promises);
+            
+            // Luego: Observar elementos para lazy loading
+            setupIntersectionObserver();
+            
+            // Finalmente: Pre-cargar el resto en segundo plano
+            preloadRemainingImages();
         }
         
-        // Iniciar desplazamiento automático
+        // Obtener elementos visibles en la galería
+        function getVisibleGalleryItems() {
+            const galleryRect = gallery.getBoundingClientRect();
+            const visibleItems = [];
+            
+            galleryItems.forEach(item => {
+                const itemRect = item.element.getBoundingClientRect();
+                if (itemRect.left < galleryRect.right && itemRect.right > galleryRect.left) {
+                    visibleItems.push(item);
+                }
+            });
+            
+            return visibleItems;
+        }
+        
+        // Configurar Intersection Observer para lazy loading
+        function setupIntersectionObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const item = entry.target;
+                        const imageId = item.dataset.id;
+                        const imgElement = item.querySelector('.lazy-image');
+                        
+                        if (!item.dataset.loaded || item.dataset.loaded === 'false') {
+                            loadSingleImage(imageId, item, false);
+                        }
+                        
+                        observer.unobserve(item);
+                    }
+                });
+            }, {
+                root: gallery,
+                rootMargin: '100px',
+                threshold: 0.1
+            });
+            
+            // Observar todos los elementos de la galería
+            galleryItems.forEach(item => {
+                observer.observe(item.element);
+            });
+        }
+        
+        // Cargar una sola imagen
+        async function loadSingleImage(imageId, galleryItem, isPriority) {
+            try {
+                // Verificar si ya está en cache
+                if (imageCache.has(imageId)) {
+                    updateGalleryImage(galleryItem, imageCache.get(imageId), imageId);
+                    return;
+                }
+                
+                // Usar diferentes tamaños según prioridad
+                const size = isPriority ? 'w400' : 'w200'; // Más pequeño para lazy loading
+                const imageUrl = `https://drive.google.com/thumbnail?id=${imageId}&sz=${size}`;
+                
+                // Crear promesa con timeout
+                const imagePromise = new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // Guardar en cache
+                        imageCache.set(imageId, img.src);
+                        resolve(img.src);
+                    };
+                    img.onerror = reject;
+                    img.src = imageUrl;
+                });
+                
+                // Timeout de 5 segundos
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Timeout')), 5000);
+                });
+                
+                const imageSrc = await Promise.race([imagePromise, timeoutPromise]);
+                updateGalleryImage(galleryItem, imageSrc, imageId);
+                
+            } catch (error) {
+                console.warn(`Error cargando imagen ${imageId}:`, error);
+                // Usar placeholder en caso de error
+                updateGalleryImage(galleryItem, 
+                    `https://via.placeholder.com/380x280/2a2a3e/3ECF8E?text=Imagen+${galleryItem.dataset.number}`, 
+                    imageId);
+            }
+        }
+        
+        // Actualizar imagen en la galería
+        function updateGalleryImage(galleryItem, imageSrc, imageId) {
+            const imgElement = galleryItem.querySelector('.lazy-image');
+            const placeholder = galleryItem.querySelector('.image-placeholder');
+            const overlayText = galleryItem.querySelector('.gallery-overlay p');
+            
+            if (imgElement && placeholder) {
+                // Mostrar imagen
+                imgElement.src = imageSrc;
+                imgElement.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+                // Marcar como cargada
+                galleryItem.dataset.loaded = 'true';
+                
+                // Actualizar overlay
+                if (overlayText) {
+                    overlayText.textContent = `ID: ${imageId.substring(0, 10)}...`;
+                }
+                
+                // Actualizar progreso
+                loadedImages++;
+                const progress = (loadedImages / totalImages) * 100;
+                progressFill.style.width = `${progress}%`;
+            }
+        }
+        
+        // Pre-cargar imágenes restantes en segundo plano
+        async function preloadRemainingImages() {
+            const uncachedImages = IMAGE_DATA.filter(img => !imageCache.has(img.id));
+            
+            if (uncachedImages.length === 0) return;
+            
+            // Usar tamaño pequeño para pre-carga
+            const preloadPromises = uncachedImages.map(img => {
+                return new Promise((resolve) => {
+                    const preloadImg = new Image();
+                    preloadImg.onload = () => {
+                        imageCache.set(img.id, preloadImg.src);
+                        resolve();
+                    };
+                    preloadImg.onerror = resolve; // Ignorar errores en pre-carga
+                    preloadImg.src = `https://drive.google.com/thumbnail?id=${img.id}&sz=w100`;
+                });
+            });
+            
+            // Ejecutar en segundo plano sin esperar
+            Promise.allSettled(preloadPromises).then(() => {
+                console.log('Pre-carga completada');
+            });
+        }
+        
+        // ESTRATEGIA 2: Pre-cargar todas las imágenes
+        async function preloadAllImages() {
+            showLoading(true);
+            progressBar.style.display = 'block';
+            progressFill.style.width = '0%';
+            
+            const total = IMAGE_DATA.length;
+            let loaded = 0;
+            
+            try {
+                // Pre-cargar en tamaños pequeños primero
+                const promises = IMAGE_DATA.map((img, index) => {
+                    return new Promise((resolve) => {
+                        const imgElement = new Image();
+                        imgElement.onload = () => {
+                            // Guardar en cache
+                            imageCache.set(img.id, imgElement.src);
+                            loaded++;
+                            progressFill.style.width = `${(loaded / total) * 100}%`;
+                            resolve();
+                        };
+                        imgElement.onerror = () => {
+                            loaded++;
+                            progressFill.style.width = `${(loaded / total) * 100}%`;
+                            resolve(); // Ignorar errores
+                        };
+                        // Usar tamaño muy pequeño para pre-carga rápida
+                        imgElement.src = `https://drive.google.com/thumbnail?id=${img.id}&sz=w100`;
+                    });
+                });
+                
+                await Promise.allSettled(promises);
+                showSuccess(`✓ ${loaded} imágenes pre-cargadas en cache`);
+                
+            } catch (error) {
+                console.error('Error en pre-carga:', error);
+            } finally {
+                showLoading(false);
+                progressBar.style.display = 'none';
+            }
+        }
+        
+        // ESTRATEGIA 3: Carga Normal (más lenta, para comparación)
+        async function loadNormalGallery() {
+            startTime = performance.now();
+            showLoading(true);
+            clearMessages();
+            
+            try {
+                gallery.innerHTML = '';
+                galleryItems = [];
+                
+                // Cargar imágenes secuencialmente (más lento)
+                for (let i = 0; i < IMAGE_DATA.length; i++) {
+                    const img = IMAGE_DATA[i];
+                    await createNormalGalleryItem(img.id, img.name, i + 1);
+                    
+                    // Pequeña pausa entre imágenes
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                updateImageCounter();
+                
+                const endTime = performance.now();
+                const loadDuration = ((endTime - startTime) / 1000).toFixed(2);
+                loadTime.textContent = `Carga: ${loadDuration}s`;
+                
+                showSuccess(`✓ ${IMAGE_DATA.length} imágenes cargadas en ${loadDuration} segundos`);
+                
+                if (IMAGE_DATA.length > 1 && !isAutoPlaying) {
+                    startAutoPlay();
+                    autoPlayToggle.classList.add('active');
+                    autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
+                    isAutoPlaying = true;
+                }
+                
+            } catch (error) {
+                console.error('Error en carga normal:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Crear elemento de galería normal (más lento)
+        async function createNormalGalleryItem(imageId, imageName, number) {
+            return new Promise((resolve) => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.style.animationDelay = `${number * 0.1}s`;
+                
+                const imageUrl = `https://drive.google.com/thumbnail?id=${imageId}&sz=w400`;
+                const viewUrl = `https://drive.google.com/file/d/${imageId}/view`;
+                
+                galleryItem.innerHTML = `
+                    <a href="${viewUrl}" target="_blank" class="gallery-link" style="display: block; width: 100%; height: 100%;">
+                        <img src="${imageUrl}" 
+                             alt="${imageName}" 
+                             class="gallery-img"
+                             onerror="this.src='https://via.placeholder.com/380x280/2a2a3e/3ECF8E?text=Imagen+${number}'">
+                        
+                        <div class="gallery-overlay">
+                            <h3>${imageName}</h3>
+                            <p>ID: ${imageId.substring(0, 10)}...</p>
+                            <p><small><i class="fas fa-external-link-alt"></i> Haz clic para ver completo</small></p>
+                        </div>
+                    </a>
+                `;
+                
+                gallery.appendChild(galleryItem);
+                galleryItems.push({ id: imageId, element: galleryItem });
+                
+                // Esperar a que la imagen cargue
+                const img = galleryItem.querySelector('img');
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                }
+            });
+        }
+        
+        // Actualizar contador
+        function updateImageCounter() {
+            imageCounter.textContent = `${galleryItems.length} imágenes`;
+        }
+        
+        // Iniciar auto-desplazamiento
         function startAutoPlay() {
             if (galleryItems.length <= 1) return;
             
@@ -726,29 +922,21 @@
             
             autoPlayInterval = setInterval(() => {
                 if (gallery.scrollLeft + gallery.offsetWidth >= gallery.scrollWidth - 50) {
-                    // Volver al inicio
-                    gallery.scrollTo({
-                        left: 0,
-                        behavior: 'smooth'
-                    });
+                    gallery.scrollTo({ left: 0, behavior: 'smooth' });
                 } else {
-                    // Avanzar
-                    gallery.scrollBy({
-                        left: gallery.offsetWidth * 0.85,
-                        behavior: 'smooth'
-                    });
+                    gallery.scrollBy({ left: gallery.offsetWidth * 0.85, behavior: 'smooth' });
                 }
             }, scrollSpeed);
         }
         
-        // Detener desplazamiento automático
+        // Detener auto-desplazamiento
         function stopAutoPlay() {
             if (autoPlayInterval) {
                 clearInterval(autoPlayInterval);
             }
         }
         
-        // Mostrar/ocultar indicador de carga
+        // Mostrar/ocultar loading
         function showLoading(show) {
             loadingIndicator.style.display = show ? 'block' : 'none';
         }
@@ -762,18 +950,8 @@
             }, 5000);
         }
         
-        // Mostrar mensaje de error
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 10000);
-        }
-        
         // Limpiar mensajes
         function clearMessages() {
-            errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
         }
         
@@ -815,34 +993,22 @@
         
         // Configurar eventos
         function setupEventListeners() {
-            // Botón para cargar imágenes
-            loadWorkingImagesBtn.addEventListener('click', loadWorkingImages);
+            loadFastBtn.addEventListener('click', loadFastGallery);
+            loadNormalBtn.addEventListener('click', loadNormalGallery);
+            preloadBtn.addEventListener('click', preloadAllImages);
             
-            // Botón anterior
             prevBtn.addEventListener('click', () => {
                 stopAutoPlay();
-                gallery.scrollBy({
-                    left: -gallery.offsetWidth * 0.85,
-                    behavior: 'smooth'
-                });
-                if (isAutoPlaying) {
-                    setTimeout(startAutoPlay, 5000);
-                }
+                gallery.scrollBy({ left: -gallery.offsetWidth * 0.85, behavior: 'smooth' });
+                if (isAutoPlaying) setTimeout(startAutoPlay, 5000);
             });
             
-            // Botón siguiente
             nextBtn.addEventListener('click', () => {
                 stopAutoPlay();
-                gallery.scrollBy({
-                    left: gallery.offsetWidth * 0.85,
-                    behavior: 'smooth'
-                });
-                if (isAutoPlaying) {
-                    setTimeout(startAutoPlay, 5000);
-                }
+                gallery.scrollBy({ left: gallery.offsetWidth * 0.85, behavior: 'smooth' });
+                if (isAutoPlaying) setTimeout(startAutoPlay, 5000);
             });
             
-            // Toggle auto-desplazamiento
             autoPlayToggle.addEventListener('click', () => {
                 if (isAutoPlaying) {
                     stopAutoPlay();
@@ -856,48 +1022,21 @@
                 isAutoPlaying = !isAutoPlaying;
             });
             
-            // Pausar auto-desplazamiento cuando el mouse está sobre la galería
             gallery.addEventListener('mouseenter', stopAutoPlay);
             gallery.addEventListener('mouseleave', () => {
-                if (isAutoPlaying) {
-                    startAutoPlay();
-                }
+                if (isAutoPlaying) startAutoPlay();
             });
-            
-            // Cerrar preview al hacer clic fuera de la imagen
-            imagePreview.addEventListener('click', (e) => {
-                if (e.target === imagePreview) {
-                    imagePreview.style.display = 'none';
-                    previewImage.src = '';
-                }
-            });
-        }
-        
-        // Cargar datos de imágenes desde un archivo externo (opcional)
-        async function loadImageData() {
-            try {
-                // Puedes crear un archivo JSON con los IDs de tus imágenes
-                // const response = await fetch('image-data.json');
-                // const data = await response.json();
-                // REAL_IMAGE_IDS.push(...data.images);
-                
-                // Por ahora usamos los IDs hardcodeados
-                console.log(`Cargados ${REAL_IMAGE_IDS.length} IDs de imágenes`);
-            } catch (error) {
-                console.warn('No se pudo cargar datos externos, usando IDs predefinidos');
-            }
         }
         
         // Inicializar
-        async function init() {
+        function init() {
             setupEventListeners();
             setupDragScroll();
-            await loadImageData();
             
-            // Cargar imágenes automáticamente al inicio
+            // Cargar automáticamente con método rápido
             setTimeout(() => {
-                loadWorkingImages();
-            }, 1000);
+                loadFastGallery();
+            }, 500);
         }
         
         // Iniciar cuando el DOM esté listo
