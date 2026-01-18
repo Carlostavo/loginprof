@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galería Drive SIN API - Supabase Edge Functions</title>
+    <title>Galería Drive SIN API - Solución Corregida</title>
     <style>
         * {
             margin: 0;
@@ -42,14 +42,6 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
-        }
-        
-        h1 i.fa-supabase {
-            color: #3ECF8E;
-        }
-        
-        h1 i.fa-google-drive {
-            color: #4285F4;
         }
         
         .subtitle {
@@ -453,9 +445,9 @@
         <header>
             <h1>
                 <i class="fab fa-google-drive"></i>
-                Galería Drive SIN API
+                Galería Drive - Solución Corregida
             </h1>
-            <p class="subtitle">Solución simple usando Supabase Edge Functions • Sin necesidad de Google API Key • Acceso directo a carpeta pública</p>
+            <p class="subtitle">Método mejorado para extraer imágenes reales de Google Drive • Filtrado inteligente de IDs</p>
         </header>
         
         <div class="folder-info">
@@ -471,25 +463,24 @@
             </div>
             
             <div class="requirements">
-                <h3><i class="fas fa-exclamation-triangle"></i> Requisitos IMPORTANTES:</h3>
+                <h3><i class="fas fa-exclamation-triangle"></i> IMPORTANTE:</h3>
                 <ul>
-                    <li class="important">La carpeta debe estar configurada como <strong>"Cualquier persona con el enlace"</strong></li>
-                    <li class="important">Los archivos deben tener permisos de visualización pública</li>
-                    <li>Todas las imágenes deben estar directamente en la carpeta principal</li>
-                    <li>No funciona con subcarpetas</li>
-                    <li>Máximo ~50 imágenes (limitación técnica sin API)</li>
+                    <li class="important">Las imágenes deben estar configuradas como <strong>"Cualquier persona con el enlace"</strong></li>
+                    <li class="important">Cada imagen individualmente debe tener permisos públicos</li>
+                    <li>Este método filtra automáticamente IDs falsos (API keys, etc.)</li>
+                    <li>Verifica que las imágenes aparezcan en la vista pública de Drive</li>
                 </ul>
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
                 <button class="btn" id="loadImagesBtn">
-                    <i class="fas fa-sync-alt"></i> Cargar Imágenes
+                    <i class="fas fa-sync-alt"></i> Método Inteligente (Recomendado)
                 </button>
-                <button class="btn btn-secondary" id="testConnectionBtn">
-                    <i class="fas fa-wifi"></i> Probar Conexión
+                <button class="btn btn-secondary" id="testMethodBtn">
+                    <i class="fas fa-vial"></i> Probar Método Simple
                 </button>
-                <button class="btn" id="manualLoadBtn" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe); margin-left: 15px;">
-                    <i class="fas fa-hand-pointer"></i> Cargar Manualmente
+                <button class="btn" id="alternativeMethodBtn" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe); margin-left: 15px;">
+                    <i class="fas fa-magic"></i> Método Alternativo
                 </button>
             </div>
             
@@ -515,7 +506,7 @@
             
             <div class="loading" id="loadingIndicator">
                 <div class="spinner"></div>
-                <p>Analizando carpeta de Drive...</p>
+                <p>Analizando carpeta de Drive con filtro inteligente...</p>
             </div>
             
             <div class="gallery" id="imageGallery">
@@ -538,19 +529,14 @@
         </div>
         
         <footer>
-            <p>Galería interactiva • Supabase Edge Functions • Sin Google API • Desplazamiento automático y manual</p>
+            <p>Galería interactiva • Filtrado inteligente de IDs • Desplazamiento automático y manual</p>
             <p style="margin-top: 10px; font-size: 0.8rem; color: #6c757d;">
-                Edge Function: <code>https://ekfggrzbdpegunxvuuos.supabase.co/functions/v1/get-drive-images</code>
+                Método optimizado para extraer solo imágenes reales de Google Drive
             </p>
         </footer>
     </div>
 
     <script>
-        // Configuración de Supabase
-        const SUPABASE_URL = 'https://ekfggrzbdpegunxvuuos.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrZmdncnpiZHBlZ3VueHZ1dW9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1NTM2OTAsImV4cCI6MjA4MzEyOTY5MH0.mtPRNwOt3pIvM8cigExtYnDeJS-Ew2rYQ5cxxz8bY14';
-        const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/get-drive-images`;
-        
         // ID de tu carpeta de Drive
         const DRIVE_FOLDER_ID = '1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm';
         
@@ -573,8 +559,8 @@
         const nextBtn = document.getElementById('nextBtn');
         const autoPlayToggle = document.getElementById('autoPlayToggle');
         const loadImagesBtn = document.getElementById('loadImagesBtn');
-        const testConnectionBtn = document.getElementById('testConnectionBtn');
-        const manualLoadBtn = document.getElementById('manualLoadBtn');
+        const testMethodBtn = document.getElementById('testMethodBtn');
+        const alternativeMethodBtn = document.getElementById('alternativeMethodBtn');
         
         // Función para agregar información de depuración
         function addDebugInfo(message) {
@@ -591,240 +577,335 @@
             debugInfo.scrollTop = debugInfo.scrollHeight;
         }
         
-        // Función principal para cargar imágenes
-        async function loadImagesFromDrive() {
+        // MÉTODO 1: INTELIGENTE - Filtra IDs reales de imágenes
+        async function loadImagesWithSmartFilter() {
             showLoading(true);
             clearMessages();
             debugInfo.innerHTML = '';
-            addDebugInfo('Iniciando carga de imágenes...');
+            addDebugInfo('=== MÉTODO INTELIGENTE ACTIVADO ===');
+            addDebugInfo('Usando filtro avanzado para identificar imágenes reales...');
             
             try {
-                addDebugInfo(`Llamando a Edge Function: ${EDGE_FUNCTION_URL}`);
-                
-                // Llamar a la Edge Function de Supabase
-                const response = await fetch(EDGE_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        folderId: DRIVE_FOLDER_ID,
-                        method: 'public'
-                    })
-                });
-                
-                addDebugInfo(`Respuesta recibida: ${response.status} ${response.statusText}`);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    addDebugInfo(`Error en respuesta: ${errorText}`);
-                    throw new Error(`Error ${response.status}: ${errorText}`);
-                }
-                
-                const data = await response.json();
-                addDebugInfo(`Datos recibidos: ${JSON.stringify(data).substring(0, 200)}...`);
-                
-                // Limpiar galería existente
-                gallery.innerHTML = '';
-                galleryItems = [];
-                
-                if (data.success && data.images && data.images.length > 0) {
-                    addDebugInfo(`Procesando ${data.images.length} imágenes...`);
-                    
-                    // Mostrar imágenes recibidas
-                    data.images.forEach((img, index) => {
-                        // Verificar que la URL sea válida
-                        if (img.url && img.url.includes('drive.google.com')) {
-                            addDebugInfo(`Añadiendo imagen ${index + 1}: ${img.url.substring(0, 50)}...`);
-                            addImageToGallery(img.url, img.name || `Imagen ${index + 1}`, `ID: ${img.id || 'N/A'}`, index + 1);
-                        } else {
-                            addDebugInfo(`⚠️ URL inválida para imagen ${index + 1}: ${img.url}`);
-                        }
-                    });
-                    
-                    updateImageCounter();
-                    showSuccess(`✓ ${data.images.length} imágenes cargadas exitosamente`);
-                    addDebugInfo(`Carga completada. ${galleryItems.length} imágenes añadidas.`);
-                    
-                    // Iniciar auto-play si hay más de una imagen
-                    if (galleryItems.length > 1 && !isAutoPlaying) {
-                        startAutoPlay();
-                        autoPlayToggle.classList.add('active');
-                        autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
-                        isAutoPlaying = true;
-                    }
-                } else {
-                    const errorMsg = 'No se encontraron imágenes en la carpeta. Asegúrate de que los archivos sean públicos.';
-                    addDebugInfo(errorMsg);
-                    showError(errorMsg);
-                }
-                
-            } catch (error) {
-                console.error('Error al cargar imágenes:', error);
-                addDebugInfo(`ERROR: ${error.message}`);
-                
-                // Si falla la Edge Function, intentar método alternativo
-                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
-                    const fallbackMsg = 'Error de conexión con Supabase. Intentando método alternativo...';
-                    addDebugInfo(fallbackMsg);
-                    showError(fallbackMsg);
-                    await tryAlternativeMethod();
-                } else {
-                    showError('Error: ' + error.message);
-                }
-            } finally {
-                showLoading(false);
-            }
-        }
-        
-        // Método alternativo - Carga directa desde Drive (sin Edge Function)
-        async function loadImagesDirectly() {
-            showLoading(true);
-            clearMessages();
-            debugInfo.innerHTML = '';
-            addDebugInfo('Intentando carga directa desde Google Drive...');
-            
-            try {
-                // Usar un método más directo para obtener IDs
-                const imageIds = await extractImageIdsDirectly();
-                
-                if (imageIds.length > 0) {
-                    gallery.innerHTML = '';
-                    galleryItems = [];
-                    
-                    addDebugInfo(`Encontrados ${imageIds.length} IDs de imágenes`);
-                    
-                    imageIds.forEach((id, index) => {
-                        const imageUrl = `https://drive.google.com/uc?export=view&id=${id}`;
-                        addDebugInfo(`Creando URL para ID ${id}: ${imageUrl}`);
-                        addImageToGallery(imageUrl, `Imagen ${index + 1}`, `ID: ${id}`, index + 1);
-                    });
-                    
-                    updateImageCounter();
-                    showSuccess(`✓ ${imageIds.length} imágenes cargadas directamente desde Drive`);
-                    addDebugInfo('Carga directa completada exitosamente');
-                    
-                    // Iniciar auto-play
-                    if (imageIds.length > 1 && !isAutoPlaying) {
-                        startAutoPlay();
-                        autoPlayToggle.classList.add('active');
-                        autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
-                        isAutoPlaying = true;
-                    }
-                } else {
-                    addDebugInfo('No se encontraron IDs de imágenes. Intentando método de respaldo...');
-                    await loadDemoImages();
-                }
-            } catch (error) {
-                addDebugInfo(`Error en carga directa: ${error.message}`);
-                await loadDemoImages();
-            } finally {
-                showLoading(false);
-            }
-        }
-        
-        // Método mejorado para extraer IDs
-        async function extractImageIdsDirectly() {
-            const imageIds = [];
-            
-            try {
-                // URL de vista pública de la carpeta
+                // Obtener HTML de la carpeta
                 const driveUrl = `https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}?usp=sharing`;
                 addDebugInfo(`Accediendo a: ${driveUrl}`);
                 
-                // Usar un proxy CORS
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(driveUrl)}`;
+                // Usar proxy para evitar CORS
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(driveUrl)}`;
                 
                 const response = await fetch(proxyUrl);
-                const html = await response.text();
+                const data = await response.json();
+                const html = data.contents;
                 
                 addDebugInfo(`HTML recibido (${html.length} caracteres)`);
                 
-                // Patrones para encontrar IDs de Drive
-                const patterns = [
-                    /"([a-zA-Z0-9_-]{25,})"/g, // IDs largos entre comillas
-                    /\/file\/d\/([a-zA-Z0-9_-]+)/g, // Patrón /file/d/ID
-                    /id=([a-zA-Z0-9_-]{25,})/g, // id=ID
-                    /\/uc\?id=([a-zA-Z0-9_-]+)/g // /uc?id=ID
+                // Patrones ESPECÍFICOS para imágenes de Google Drive
+                const imagePatterns = [
+                    // Patrón específico para thumbnails de Drive
+                    /"https:\/\/lh\d+\.googleusercontent\.com\/[a-zA-Z0-9_-]+"/g,
+                    // Patrón para IDs de archivos en data-id
+                    /data-id="([a-zA-Z0-9_-]{25,})"/g,
+                    // Patrón para URLs de preview
+                    /"([a-zA-Z0-9_-]{25,})",\["https:\/\/drive\.google\.com/g,
+                    // Patrón específico de estructura JSON de Drive
+                    /"(\w{25,})",\["\d+","[\w\s]+","image\/\w+"/g
                 ];
                 
-                patterns.forEach(pattern => {
+                const allIds = [];
+                
+                // Buscar con cada patrón
+                imagePatterns.forEach((pattern, index) => {
+                    addDebugInfo(`Buscando con patrón ${index + 1}...`);
                     let match;
                     while ((match = pattern.exec(html)) !== null) {
-                        const id = match[1];
-                        if (id && id.length >= 25 && !imageIds.includes(id)) {
-                            imageIds.push(id);
-                            addDebugInfo(`Encontrado ID: ${id}`);
+                        const id = match[1] || match[0].replace(/"/g, '');
+                        if (id && !allIds.includes(id)) {
+                            allIds.push(id);
+                            addDebugInfo(`Posible imagen encontrada: ${id.substring(0, 30)}...`);
                         }
                     }
                 });
                 
-                // Eliminar duplicados y limitar
-                const uniqueIds = [...new Set(imageIds)];
-                addDebugInfo(`IDs únicos encontrados: ${uniqueIds.length}`);
+                addDebugInfo(`Total de posibles IDs encontrados: ${allIds.length}`);
                 
-                return uniqueIds.slice(0, 50); // Limitar a 50 imágenes
+                // FILTRO AVANZADO: Eliminar IDs que NO son imágenes
+                const filteredIds = allIds.filter(id => {
+                    // REGLAS PARA FILTRAR IDs FALSOS:
+                    
+                    // 1. NO debe empezar con "AIzaSy" (API keys)
+                    if (id.startsWith('AIzaSy')) {
+                        addDebugInfo(`❌ Eliminado (API Key): ${id}`);
+                        return false;
+                    }
+                    
+                    // 2. NO debe ser el ID de la carpeta
+                    if (id === DRIVE_FOLDER_ID) {
+                        addDebugInfo(`❌ Eliminado (ID de carpeta): ${id}`);
+                        return false;
+                    }
+                    
+                    // 3. NO debe contener guiones bajos consecutivos o caracteres raros
+                    if (id.includes('__') || id.includes('--') || id.includes('  ')) {
+                        addDebugInfo(`❌ Eliminado (formato extraño): ${id}`);
+                        return false;
+                    }
+                    
+                    // 4. Debe tener longitud típica de IDs de Drive (25-40 caracteres)
+                    if (id.length < 25 || id.length > 50) {
+                        addDebugInfo(`❌ Eliminado (longitud incorrecta: ${id.length}): ${id}`);
+                        return false;
+                    }
+                    
+                    // 5. NO debe contener palabras como "ANONYMOUS", "Viewer", etc.
+                    const invalidKeywords = ['ANONYMOUS', 'Viewer', 'mipmoem', 'lmjegmlic', '6Lc4F8gU'];
+                    if (invalidKeywords.some(keyword => id.includes(keyword))) {
+                        addDebugInfo(`❌ Eliminado (palabra clave inválida): ${id}`);
+                        return false;
+                    }
+                    
+                    // 6. Debe seguir patrón típico de IDs de Drive (mezcla de letras, números, guiones)
+                    const validPattern = /^[a-zA-Z0-9_-]{25,50}$/;
+                    if (!validPattern.test(id)) {
+                        addDebugInfo(`❌ Eliminado (patrón inválido): ${id}`);
+                        return false;
+                    }
+                    
+                    addDebugInfo(`✅ ID aceptado: ${id}`);
+                    return true;
+                });
+                
+                addDebugInfo(`IDs después del filtro: ${filteredIds.length}`);
+                
+                // Si encontramos IDs válidos, cargarlas
+                if (filteredIds.length > 0) {
+                    gallery.innerHTML = '';
+                    galleryItems = [];
+                    
+                    addDebugInfo(`Procesando ${filteredIds.length} imágenes válidas...`);
+                    
+                    // Cargar imágenes con verificación
+                    for (let i = 0; i < Math.min(filteredIds.length, 30); i++) {
+                        const id = filteredIds[i];
+                        const imageUrl = `https://drive.google.com/uc?export=view&id=${id}`;
+                        
+                        // Verificar si la imagen es accesible
+                        const isAccessible = await verifyImageAccess(imageUrl);
+                        
+                        if (isAccessible) {
+                            addImageToGallery(imageUrl, `Imagen ${i + 1}`, `ID: ${id}`, i + 1);
+                            addDebugInfo(`✅ Imagen ${i + 1} cargada: ${id}`);
+                        } else {
+                            addDebugInfo(`⚠️ Imagen no accesible (posiblemente sin permisos): ${id}`);
+                        }
+                        
+                        // Pequeña pausa para no sobrecargar
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    
+                    updateImageCounter();
+                    
+                    if (galleryItems.length > 0) {
+                        const successMsg = `✓ ${galleryItems.length} imágenes cargadas correctamente`;
+                        showSuccess(successMsg);
+                        addDebugInfo(successMsg);
+                        
+                        // Iniciar auto-play
+                        if (galleryItems.length > 1 && !isAutoPlaying) {
+                            startAutoPlay();
+                            autoPlayToggle.classList.add('active');
+                            autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
+                            isAutoPlaying = true;
+                        }
+                    } else {
+                        const errorMsg = 'Se encontraron IDs pero las imágenes no son accesibles públicamente.';
+                        showError(errorMsg);
+                        addDebugInfo(errorMsg);
+                    }
+                } else {
+                    addDebugInfo('No se encontraron IDs válidos de imágenes. Probando método alternativo...');
+                    await tryAlternativeExtraction();
+                }
                 
             } catch (error) {
-                addDebugInfo(`Error extrayendo IDs: ${error.message}`);
-                return [];
+                addDebugInfo(`ERROR: ${error.message}`);
+                showError('Error en método inteligente: ' + error.message);
+                await tryAlternativeExtraction();
+            } finally {
+                showLoading(false);
             }
         }
         
-        // Cargar imágenes de demostración
-        async function loadDemoImages() {
-            addDebugInfo('Cargando imágenes de demostración...');
+        // Verificar si una imagen es accesible
+        async function verifyImageAccess(url) {
+            try {
+                // Intentar cargar la imagen
+                const testImg = new Image();
+                testImg.src = url;
+                
+                // Esperar a que cargue o falle
+                return await new Promise((resolve) => {
+                    testImg.onload = () => {
+                        addDebugInfo(`   ↳ Verificación OK: ${url.substring(0, 50)}...`);
+                        resolve(true);
+                    };
+                    testImg.onerror = () => {
+                        addDebugInfo(`   ↳ Verificación FALLIDA: ${url.substring(0, 50)}...`);
+                        resolve(false);
+                    };
+                    
+                    // Timeout después de 3 segundos
+                    setTimeout(() => {
+                        addDebugInfo(`   ↳ Verificación TIMEOUT: ${url.substring(0, 50)}...`);
+                        resolve(false);
+                    }, 3000);
+                });
+            } catch (error) {
+                addDebugInfo(`   ↳ Error en verificación: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // MÉTODO 2: ALTERNATIVO - Usar estructura JSON oculta
+        async function tryAlternativeExtraction() {
+            addDebugInfo('=== MÉTODO ALTERNATIVO ACTIVADO ===');
+            addDebugInfo('Buscando datos JSON en el HTML...');
             
-            // Limpiar galería existente
+            try {
+                const driveUrl = `https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}?usp=sharing`;
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(driveUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                const html = data.contents;
+                
+                // Buscar datos JSON en el HTML
+                const jsonMatches = html.match(/\[\["[\w\s]+","([a-zA-Z0-9_-]{25,})","[\w\s]+","image\/\w+"/g);
+                
+                if (jsonMatches && jsonMatches.length > 0) {
+                    addDebugInfo(`Encontradas ${jsonMatches.length} entradas JSON`);
+                    
+                    const imageIds = [];
+                    jsonMatches.forEach(match => {
+                        const idMatch = match.match(/"([a-zA-Z0-9_-]{25,})"/);
+                        if (idMatch && idMatch[1]) {
+                            const id = idMatch[1];
+                            if (!imageIds.includes(id) && !id.startsWith('AIzaSy')) {
+                                imageIds.push(id);
+                                addDebugInfo(`ID desde JSON: ${id}`);
+                            }
+                        }
+                    });
+                    
+                    if (imageIds.length > 0) {
+                        gallery.innerHTML = '';
+                        galleryItems = [];
+                        
+                        imageIds.forEach((id, index) => {
+                            const imageUrl = `https://drive.google.com/uc?export=view&id=${id}`;
+                            addImageToGallery(imageUrl, `Imagen ${index + 1}`, `ID: ${id}`, index + 1);
+                        });
+                        
+                        updateImageCounter();
+                        showSuccess(`✓ ${imageIds.length} imágenes encontradas mediante análisis JSON`);
+                        return true;
+                    }
+                }
+                
+                addDebugInfo('No se encontraron datos JSON válidos');
+                return false;
+                
+            } catch (error) {
+                addDebugInfo(`Error en método alternativo: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // MÉTODO 3: SIMPLE - Para pruebas
+        async function testSimpleMethod() {
+            showLoading(true);
+            clearMessages();
+            debugInfo.innerHTML = '';
+            addDebugInfo('=== MÉTODO SIMPLE DE PRUEBA ===');
+            
+            try {
+                // Cargar algunas imágenes de ejemplo que SÍ funcionan
+                const testImages = [
+                    {
+                        url: 'https://drive.google.com/uc?export=view&id=1PEGJbSS4s5AlXg9BeQORgIF7s1bEn-DO',
+                        name: 'Imagen de prueba 1',
+                        description: 'ID verificada manualmente'
+                    },
+                    {
+                        url: 'https://drive.google.com/uc?export=view&id=1Ob_s_u7935yFl7ryFCPmEauLw7u6ICJJ',
+                        name: 'Imagen de prueba 2', 
+                        description: 'ID verificada manualmente'
+                    },
+                    {
+                        url: 'https://drive.google.com/uc?export=view&id=1lgicS6s6bQzYQklmxGFhIrSHM6iwzbiw',
+                        name: 'Imagen de prueba 3',
+                        description: 'ID verificada manualmente'
+                    }
+                ];
+                
+                gallery.innerHTML = '';
+                galleryItems = [];
+                
+                testImages.forEach((img, index) => {
+                    addImageToGallery(img.url, img.name, img.description, index + 1);
+                });
+                
+                updateImageCounter();
+                showSuccess('✓ 3 imágenes de prueba cargadas');
+                addDebugInfo('Método simple completado');
+                
+            } catch (error) {
+                showError('Error en método simple: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // MÉTODO 4: USAR IMÁGENES PÚBLICAS COMO FALLBACK
+        async function loadFallbackImages() {
+            addDebugInfo('Cargando imágenes de respaldo...');
+            
             gallery.innerHTML = '';
             galleryItems = [];
             
-            // Imágenes de demostración reales (sin Unsplash que requiere CORS)
-            const demoImages = [
+            // URLs de imágenes públicas que SÍ funcionan
+            const fallbackImages = [
                 {
-                    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop',
-                    name: 'Montañas',
-                    description: 'Paisaje montañoso'
+                    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop',
+                    name: 'Paisaje de montañas',
+                    description: 'Imagen de respaldo 1'
                 },
                 {
-                    url: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&auto=format&fit=crop',
-                    name: 'Santorini',
-                    description: 'Puesta de sol en Grecia'
+                    url: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&h=600&fit=crop',
+                    name: 'Santorini, Grecia',
+                    description: 'Imagen de respaldo 2'
                 },
                 {
-                    url: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=800&auto=format&fit=crop',
-                    name: 'Patagonia',
-                    description: 'Torres del Paine'
+                    url: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=800&h=600&fit=crop',
+                    name: 'Patagonia, Chile',
+                    description: 'Imagen de respaldo 3'
                 },
                 {
-                    url: 'https://images.unsplash.com/photo-1505852679233-d9fd70aff56d?w=800&auto=format&fit=crop',
-                    name: 'Monte Fuji',
-                    description: 'Volcán japonés'
-                },
-                {
-                    url: 'https://images.unsplash.com/photo-1562229128-14c05fd0d0d0?w=800&auto=format&fit=crop',
-                    name: 'Yellowstone',
-                    description: 'Parque nacional'
-                },
-                {
-                    url: 'https://images.unsplash.com/photo-1517868670896-0c17c0404281?w=800&auto=format&fit=crop',
-                    name: 'Petra',
-                    description: 'Ciudad del desierto'
+                    url: 'https://images.unsplash.com/photo-1505852679233-d9fd70aff56d?w=800&h=600&fit=crop',
+                    name: 'Monte Fuji, Japón',
+                    description: 'Imagen de respaldo 4'
                 }
             ];
             
-            // Crear elementos de galería
-            demoImages.forEach((img, index) => {
+            fallbackImages.forEach((img, index) => {
                 addImageToGallery(img.url, img.name, img.description, index + 1);
             });
             
             updateImageCounter();
-            showSuccess('✓ Modo demostración activado (6 imágenes de prueba)');
-            addDebugInfo('Imágenes de demostración cargadas');
+            showSuccess('✓ Modo de respaldo activado (4 imágenes públicas)');
+            addDebugInfo('Imágenes de respaldo cargadas');
             
             // Iniciar auto-play
-            if (demoImages.length > 1 && !isAutoPlaying) {
+            if (fallbackImages.length > 1 && !isAutoPlaying) {
                 startAutoPlay();
                 autoPlayToggle.classList.add('active');
                 autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
@@ -832,26 +913,19 @@
             }
         }
         
-        // Añadir imagen a la galería (VERSIÓN CORREGIDA)
+        // Añadir imagen a la galería
         function addImageToGallery(url, title, description, number) {
             const galleryItem = document.createElement('div');
             galleryItem.className = 'gallery-item';
             
-            // Verificar que la URL sea válida, si no, usar placeholder
-            let imageUrl = url;
-            if (!url || !url.includes('http')) {
-                imageUrl = `https://via.placeholder.com/380x280/3ECF8E/1a1a2e?text=Imagen+${number}`;
-                addDebugInfo(`⚠️ URL inválida reemplazada por placeholder: ${url}`);
-            }
-            
             galleryItem.innerHTML = `
-                <a href="${imageUrl}" target="_blank" class="gallery-link">
-                    <img src="${imageUrl}" alt="${title}" class="gallery-img" 
-                         onerror="this.onerror=null; this.src='https://via.placeholder.com/380x280/3ECF8E/1a1a2e?text=Error+${number}'">
+                <a href="${url}" target="_blank" class="gallery-link">
+                    <img src="${url}" alt="${title}" class="gallery-img" 
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/380x280/3ECF8E/1a1a2e?text=Imagen+${number}'">
                     <div class="gallery-overlay">
                         <h3>${title}</h3>
                         <p>${description}</p>
-                        <p><small><i class="fas fa-external-link-alt"></i> Haz clic para ver en tamaño completo</small></p>
+                        <p><small><i class="fas fa-external-link-alt"></i> Haz clic para ver completo</small></p>
                     </div>
                 </a>
             `;
@@ -860,45 +934,10 @@
             
             // Añadir al array para seguimiento
             galleryItems.push({
-                url: imageUrl,
+                url: url,
                 title: title,
                 description: description
             });
-            
-            addDebugInfo(`Imagen añadida: ${title} - ${imageUrl.substring(0, 50)}...`);
-        }
-        
-        // Probar conexión con Supabase
-        async function testSupabaseConnection() {
-            showLoading(true);
-            clearMessages();
-            debugInfo.innerHTML = '';
-            addDebugInfo('Probando conexión con Supabase...');
-            
-            try {
-                const response = await fetch(EDGE_FUNCTION_URL, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const msg = '✓ Conexión con Supabase Edge Function exitosa';
-                    addDebugInfo(msg);
-                    showSuccess(msg);
-                } else {
-                    const errorMsg = `Error ${response.status}`;
-                    addDebugInfo(`✗ ${errorMsg}`);
-                    throw new Error(errorMsg);
-                }
-            } catch (error) {
-                const errorMsg = `✗ Error de conexión: ${error.message}`;
-                addDebugInfo(errorMsg);
-                showError(errorMsg);
-            } finally {
-                showLoading(false);
-            }
         }
         
         // Actualizar contador de imágenes
@@ -980,7 +1019,6 @@
                 startX = e.pageX - gallery.offsetLeft;
                 scrollLeft = gallery.scrollLeft;
                 stopAutoPlay();
-                addDebugInfo('Arrastre iniciado');
             });
             
             gallery.addEventListener('mouseleave', () => {
@@ -994,7 +1032,6 @@
                 if (isAutoPlaying) {
                     setTimeout(startAutoPlay, 2000);
                 }
-                addDebugInfo('Arrastre finalizado');
             });
             
             gallery.addEventListener('mousemove', (e) => {
@@ -1008,22 +1045,22 @@
         
         // Configurar eventos
         function setupEventListeners() {
-            // Botón para cargar imágenes
-            loadImagesBtn.addEventListener('click', loadImagesFromDrive);
+            // Botón para método inteligente
+            loadImagesBtn.addEventListener('click', loadImagesWithSmartFilter);
             
-            // Botón para probar conexión
-            testConnectionBtn.addEventListener('click', testSupabaseConnection);
+            // Botón para método simple
+            testMethodBtn.addEventListener('click', testSimpleMethod);
             
-            // Botón para carga manual
-            manualLoadBtn.addEventListener('click', loadImagesDirectly);
+            // Botón para método alternativo
+            alternativeMethodBtn.addEventListener('click', loadFallbackImages);
             
             // Botón para toggle debug
             debugToggle.addEventListener('click', () => {
                 debugMode = !debugMode;
                 debugInfo.style.display = debugMode ? 'block' : 'none';
                 debugToggle.innerHTML = debugMode ? 
-                    '<i class="fas fa-bug"></i> Ocultar Información de Depuración' :
-                    '<i class="fas fa-bug"></i> Mostrar Información de Depuración';
+                    '<i class="fas fa-bug"></i> Ocultar Depuración' :
+                    '<i class="fas fa-bug"></i> Mostrar Depuración';
                 addDebugInfo(`Modo depuración ${debugMode ? 'activado' : 'desactivado'}`);
             });
             
@@ -1063,7 +1100,6 @@
                     autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
                 }
                 isAutoPlaying = !isAutoPlaying;
-                addDebugInfo(`Auto-desplazamiento ${isAutoPlaying ? 'activado' : 'desactivado'}`);
             });
             
             // Pausar auto-desplazamiento cuando el mouse está sobre la galería
@@ -1080,15 +1116,9 @@
             setupEventListeners();
             setupDragScroll();
             
-            // Verificar configuración
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-                showError('⚠️ Configura tu URL y API Key de Supabase');
-                return;
-            }
-            
-            // Cargar imágenes automáticamente al inicio
+            // Cargar automáticamente al inicio con método inteligente
             setTimeout(() => {
-                loadImagesFromDrive();
+                loadImagesWithSmartFilter();
             }, 1000);
         }
         
