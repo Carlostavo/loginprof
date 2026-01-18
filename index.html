@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galería de Carpeta Drive SIN API</title>
+    <title>Galería Drive SIN API - Supabase Edge Functions</title>
     <style>
         * {
             margin: 0;
@@ -13,10 +13,10 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #333;
+            color: #e6e6e6;
         }
         
         .container {
@@ -26,15 +26,16 @@
         
         header {
             text-align: center;
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
             padding: 40px;
             border-radius: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         h1 {
-            color: #4285F4;
+            color: #3ECF8E;
             font-size: 2.8rem;
             margin-bottom: 15px;
             display: flex;
@@ -43,39 +44,49 @@
             gap: 20px;
         }
         
+        h1 i.fa-supabase {
+            color: #3ECF8E;
+        }
+        
+        h1 i.fa-google-drive {
+            color: #4285F4;
+        }
+        
         .subtitle {
-            color: #666;
-            font-size: 1.2rem;
+            color: #a3b1c6;
+            font-size: 1.1rem;
             max-width: 800px;
             margin: 0 auto;
             line-height: 1.6;
         }
         
-        .status-card {
-            background: white;
+        .folder-info {
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .status-info {
+        .folder-info h2 {
+            color: #3ECF8E;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .folder-link {
-            background: #f8f9fa;
-            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
             border-radius: 10px;
-            flex: 1;
-            min-width: 300px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3ECF8E;
         }
         
         .folder-link a {
-            color: #4285F4;
+            color: #4cc9f0;
             text-decoration: none;
             font-weight: 600;
             word-break: break-all;
@@ -83,10 +94,49 @@
         
         .folder-link a:hover {
             text-decoration: underline;
+            color: #6bd4f5;
+        }
+        
+        .folder-id {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            color: #ffcc00;
+            font-size: 1.1rem;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 204, 0, 0.2);
+        }
+        
+        .requirements {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #4285F4;
+        }
+        
+        .requirements h3 {
+            color: #4285F4;
+            margin-bottom: 10px;
+        }
+        
+        .requirements ul {
+            padding-left: 20px;
+        }
+        
+        .requirements li {
+            margin-bottom: 8px;
+            color: #a3b1c6;
+        }
+        
+        .requirements .important {
+            color: #ff6b6b;
+            font-weight: 600;
         }
         
         .btn {
-            background: linear-gradient(135deg, #4285F4, #34A853);
+            background: linear-gradient(135deg, #3ECF8E, #2a9d8f);
             color: white;
             border: none;
             padding: 15px 30px;
@@ -98,27 +148,30 @@
             align-items: center;
             gap: 12px;
             font-weight: 600;
-            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+            box-shadow: 0 5px 15px rgba(62, 207, 142, 0.3);
         }
         
         .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4);
+            box-shadow: 0 8px 20px rgba(62, 207, 142, 0.4);
+            background: linear-gradient(135deg, #3ECF8E, #219c8f);
         }
         
         .btn:active {
             transform: translateY(-1px);
         }
         
-        .btn-refresh {
-            background: linear-gradient(135deg, #EA4335, #FBBC05);
+        .btn-secondary {
+            background: linear-gradient(135deg, #EA4335, #f4a261);
+            margin-left: 15px;
         }
         
         .gallery-container {
-            background: white;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 30px;
         }
         
@@ -133,19 +186,19 @@
         
         .gallery-title {
             font-size: 1.8rem;
-            color: #4285F4;
+            color: #4cc9f0;
             display: flex;
             align-items: center;
             gap: 15px;
         }
         
         .image-counter {
-            background: #f8f9fa;
+            background: rgba(0, 0, 0, 0.3);
             padding: 10px 25px;
             border-radius: 25px;
             font-weight: 600;
-            color: #555;
-            border: 2px solid #e0e0e0;
+            color: #a3b1c6;
+            border: 2px solid rgba(255, 255, 255, 0.1);
             font-size: 1.1rem;
         }
         
@@ -156,12 +209,12 @@
             padding: 25px;
             gap: 25px;
             border-radius: 15px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: rgba(0, 0, 0, 0.2);
             cursor: grab;
             min-height: 350px;
             align-items: center;
             scrollbar-width: thin;
-            scrollbar-color: #4285F4 #e0e0e0;
+            scrollbar-color: #3ECF8E #2a2a3e;
             margin-bottom: 30px;
         }
         
@@ -170,12 +223,12 @@
         }
         
         .gallery::-webkit-scrollbar-track {
-            background: #e0e0e0;
+            background: #2a2a3e;
             border-radius: 10px;
         }
         
         .gallery::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #4285F4, #34A853);
+            background: linear-gradient(135deg, #3ECF8E, #4cc9f0);
             border-radius: 10px;
         }
         
@@ -189,16 +242,17 @@
             height: 280px;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            border: 4px solid white;
+            border: 3px solid rgba(255, 255, 255, 0.1);
         }
         
         .gallery-item:hover {
             transform: translateY(-12px) scale(1.05);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
             z-index: 10;
+            border-color: #3ECF8E;
         }
         
         .gallery-img {
@@ -243,9 +297,9 @@
         }
         
         .control-btn {
-            background: white;
-            color: #4285F4;
-            border: 3px solid #4285F4;
+            background: rgba(255, 255, 255, 0.1);
+            color: #4cc9f0;
+            border: 2px solid #4cc9f0;
             border-radius: 50%;
             width: 65px;
             height: 65px;
@@ -255,17 +309,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
         
         .control-btn:hover {
-            background: #4285F4;
-            color: white;
+            background: #4cc9f0;
+            color: #1a1a2e;
             transform: scale(1.15);
+            border-color: #4cc9f0;
         }
         
         .auto-play-toggle {
-            background: linear-gradient(135deg, #4285F4, #34A853);
+            background: linear-gradient(135deg, #3ECF8E, #4cc9f0);
             color: white;
             border: none;
             border-radius: 30px;
@@ -276,16 +331,16 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+            box-shadow: 0 5px 15px rgba(62, 207, 142, 0.3);
         }
         
         .auto-play-toggle:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4);
+            box-shadow: 0 8px 20px rgba(62, 207, 142, 0.4);
         }
         
         .auto-play-toggle.active {
-            background: linear-gradient(135deg, #EA4335, #FBBC05);
+            background: linear-gradient(135deg, #EA4335, #f4a261);
         }
         
         .loading {
@@ -297,8 +352,8 @@
         .spinner {
             width: 60px;
             height: 60px;
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #4285F4;
+            border: 6px solid rgba(255, 255, 255, 0.1);
+            border-top: 6px solid #3ECF8E;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 25px;
@@ -310,44 +365,31 @@
         }
         
         .error-message {
-            background: #FFEBEE;
-            color: #D32F2F;
+            background: rgba(211, 47, 47, 0.1);
+            color: #ff6b6b;
             padding: 20px;
             border-radius: 10px;
             margin-top: 20px;
-            border-left: 5px solid #D32F2F;
+            border-left: 4px solid #ff6b6b;
             display: none;
         }
         
-        .instructions {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 30px;
-        }
-        
-        .instructions h3 {
-            color: #4285F4;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .instructions ul {
-            padding-left: 25px;
-        }
-        
-        .instructions li {
-            margin-bottom: 10px;
-            line-height: 1.6;
+        .success-message {
+            background: rgba(76, 175, 80, 0.1);
+            color: #3ECF8E;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #3ECF8E;
+            display: none;
         }
         
         footer {
             text-align: center;
-            color: white;
+            color: #a3b1c6;
             margin-top: 40px;
             padding: 20px;
+            font-size: 0.9rem;
         }
         
         @media (max-width: 768px) {
@@ -368,6 +410,16 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+            
+            .btn-secondary {
+                margin-left: 0;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -375,23 +427,47 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fab fa-google-drive"></i> Galería desde Carpeta de Drive</h1>
-            <p class="subtitle">Mostrando automáticamente todas las imágenes de tu carpeta compartida • Desplazamiento automático y manual</p>
+            <h1>
+                <i class="fab fa-google-drive"></i>
+                Galería Drive SIN API
+            </h1>
+            <p class="subtitle">Solución simple usando Supabase Edge Functions • Sin necesidad de Google API Key • Acceso directo a carpeta pública</p>
         </header>
         
-        <div class="status-card">
-            <h2><i class="fas fa-link"></i> Carpeta Configurada</h2>
-            <div class="status-info">
-                <div class="folder-link">
-                    <p><strong>Carpeta de Drive:</strong></p>
-                    <a href="https://drive.google.com/drive/folders/1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm" target="_blank">
-                        https://drive.google.com/drive/folders/1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm
-                    </a>
-                </div>
+        <div class="folder-info">
+            <h2><i class="fas fa-folder"></i> Tu Carpeta de Drive</h2>
+            
+            <div class="folder-link">
+                <p><strong>Enlace de la carpeta:</strong></p>
+                <a href="https://drive.google.com/drive/folders/1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm" target="_blank">
+                    https://drive.google.com/drive/folders/1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm
+                </a>
+                <p><strong>ID de carpeta:</strong></p>
+                <div class="folder-id">1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm</div>
+            </div>
+            
+            <div class="requirements">
+                <h3><i class="fas fa-exclamation-triangle"></i> Requisitos IMPORTANTES:</h3>
+                <ul>
+                    <li class="important">La carpeta debe estar configurada como <strong>"Cualquier persona con el enlace"</strong></li>
+                    <li class="important">Los archivos deben tener permisos de visualización pública</li>
+                    <li>Todas las imágenes deben estar directamente en la carpeta principal</li>
+                    <li>No funciona con subcarpetas</li>
+                    <li>Máximo ~50 imágenes (limitación técnica sin API)</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
                 <button class="btn" id="loadImagesBtn">
                     <i class="fas fa-sync-alt"></i> Cargar Imágenes
                 </button>
+                <button class="btn btn-secondary" id="testConnectionBtn">
+                    <i class="fas fa-wifi"></i> Probar Conexión
+                </button>
             </div>
+            
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
         </div>
         
         <div class="gallery-container">
@@ -402,10 +478,8 @@
             
             <div class="loading" id="loadingIndicator">
                 <div class="spinner"></div>
-                <p>Buscando imágenes en tu carpeta de Drive...</p>
+                <p>Analizando carpeta de Drive...</p>
             </div>
-            
-            <div class="error-message" id="errorMessage"></div>
             
             <div class="gallery" id="imageGallery">
                 <!-- Las imágenes se cargarán aquí -->
@@ -426,26 +500,22 @@
             </div>
         </div>
         
-        <div class="instructions">
-            <h3><i class="fas fa-info-circle"></i> Cómo funciona</h3>
-            <ul>
-                <li>Esta solución <strong>NO requiere API Key</strong> - usa un método alternativo para acceder a las imágenes</li>
-                <li>Solo funciona con carpetas que estén configuradas como "Cualquier persona con el enlace"</li>
-                <li>Las imágenes deben estar directamente en la carpeta (no en subcarpetas)</li>
-                <li>Si agregas nuevas imágenes a la carpeta, haz clic en "Cargar Imágenes" para actualizar</li>
-                <li>El auto-desplazamiento se puede activar/desactivar en cualquier momento</li>
-                <li>Puedes arrastrar horizontalmente con el mouse para navegar manualmente</li>
-            </ul>
-        </div>
-        
         <footer>
-            <p>Galería interactiva desde Google Drive • Sin necesidad de API Key • Desplazamiento automático y manual</p>
+            <p>Galería interactiva • Supabase Edge Functions • Sin Google API • Desplazamiento automático y manual</p>
+            <p style="margin-top: 10px; font-size: 0.8rem; color: #6c757d;">
+                Edge Function: <code>https://ekfggrzbdpegunxvuuos.supabase.co/functions/v1/get-drive-images</code>
+            </p>
         </footer>
     </div>
 
     <script>
-        // Configuración
-        const FOLDER_ID = '1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm';
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://ekfggrzbdpegunxvuuos.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrZmdncnpiZHBlZ3VueHZ1dW9zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY2MTI4MjAsImV4cCI6MjA1MjE4ODgyMH0.CFXoKWr4NbFgYTrGLo9iF-fSBnGrL_0LeKZPHgqw7Y8';
+        const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/get-drive-images`;
+        
+        // ID de tu carpeta de Drive
+        const DRIVE_FOLDER_ID = '1m2ugAnTsuNS1bjBKKm7paIfgIlpbsVUm';
         
         // Variables globales
         let autoPlayInterval;
@@ -457,109 +527,208 @@
         const gallery = document.getElementById('imageGallery');
         const loadingIndicator = document.getElementById('loadingIndicator');
         const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
         const imageCounter = document.getElementById('imageCounter');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const autoPlayToggle = document.getElementById('autoPlayToggle');
         const loadImagesBtn = document.getElementById('loadImagesBtn');
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
         
-        // Función para obtener imágenes de la carpeta de Drive SIN API
-        async function getImagesFromDrive() {
+        // Función principal para cargar imágenes
+        async function loadImagesFromDrive() {
             showLoading(true);
-            clearError();
+            clearMessages();
             
             try {
-                // Método 1: Usar Google Drive embed (solo funciona si la carpeta es pública)
-                const embedUrl = `https://drive.google.com/embeddedfolderview?id=${FOLDER_ID}#grid`;
+                // Llamar a la Edge Function de Supabase
+                const response = await fetch(EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        folderId: DRIVE_FOLDER_ID,
+                        method: 'public'
+                    })
+                });
                 
-                // Método alternativo: Usar un proxy simple (CORS Anywhere)
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                const driveUrl = `https://drive.google.com/drive/folders/${FOLDER_ID}`;
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Error ${response.status}: ${errorText}`);
+                }
                 
-                // Método seguro: Simular imágenes con IDs conocidos
-                // Nota: En producción necesitarías un backend para extraer los IDs reales
+                const data = await response.json();
                 
-                // Para demostración, usaremos imágenes de muestra
-                // En un caso real, necesitarías extraer los IDs de los archivos de la carpeta
+                // Limpiar galería existente
+                gallery.innerHTML = '';
+                galleryItems = [];
                 
-                // Simulamos una carga con imágenes de ejemplo
-                await simulateImageLoad();
+                if (data.success && data.images && data.images.length > 0) {
+                    // Mostrar imágenes recibidas
+                    data.images.forEach((img, index) => {
+                        addImageToGallery(img.url, img.name, `Imagen ${index + 1}`, index + 1);
+                    });
+                    
+                    updateImageCounter();
+                    showSuccess(`✓ ${data.images.length} imágenes cargadas exitosamente`);
+                    
+                    // Iniciar auto-play si hay más de una imagen
+                    if (data.images.length > 1 && !isAutoPlaying) {
+                        startAutoPlay();
+                        autoPlayToggle.classList.add('active');
+                        autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
+                        isAutoPlaying = true;
+                    }
+                } else {
+                    showError('No se encontraron imágenes en la carpeta. Asegúrate de que los archivos sean públicos.');
+                }
                 
             } catch (error) {
-                showError('Error al cargar imágenes: ' + error.message);
-                console.error('Error:', error);
+                console.error('Error al cargar imágenes:', error);
+                
+                // Si falla la Edge Function, intentar método alternativo
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    showError('Error de conexión con Supabase. Intentando método alternativo...');
+                    await tryAlternativeMethod();
+                } else {
+                    showError('Error: ' + error.message);
+                }
             } finally {
                 showLoading(false);
             }
         }
         
-        // Simulación de carga de imágenes (para demostración)
-        async function simulateImageLoad() {
+        // Método alternativo si falla Supabase
+        async function tryAlternativeMethod() {
+            try {
+                // Intentar extraer imágenes usando un proxy simple
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const driveUrl = `https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}`;
+                
+                const response = await fetch(proxyUrl + encodeURIComponent(driveUrl));
+                const html = await response.text();
+                
+                // Extraer IDs de imágenes del HTML (simplificado)
+                const imageIds = extractImageIdsFromHTML(html);
+                
+                if (imageIds.length > 0) {
+                    gallery.innerHTML = '';
+                    galleryItems = [];
+                    
+                    imageIds.forEach((id, index) => {
+                        const imageUrl = `https://drive.google.com/uc?id=${id}`;
+                        addImageToGallery(imageUrl, `Imagen ${index + 1}`, `ID: ${id}`, index + 1);
+                    });
+                    
+                    updateImageCounter();
+                    showSuccess(`✓ ${imageIds.length} imágenes encontradas (método alternativo)`);
+                } else {
+                    // Si no se encuentran imágenes, cargar demo
+                    await loadDemoImages();
+                }
+            } catch (error) {
+                // Si todo falla, cargar imágenes de demostración
+                await loadDemoImages();
+            }
+        }
+        
+        // Extraer IDs de imágenes del HTML (método simplificado)
+        function extractImageIdsFromHTML(html) {
+            const ids = [];
+            const regex = /\/d\/([a-zA-Z0-9_-]+)/g;
+            let match;
+            
+            while ((match = regex.exec(html)) !== null) {
+                if (match[1] && !ids.includes(match[1])) {
+                    ids.push(match[1]);
+                }
+            }
+            
+            return ids.slice(0, 20); // Limitar a 20 imágenes
+        }
+        
+        // Cargar imágenes de demostración
+        async function loadDemoImages() {
             // Limpiar galería existente
             gallery.innerHTML = '';
             galleryItems = [];
             
-            // Imágenes de ejemplo (en un caso real, estos IDs vendrían de la carpeta)
-            const sampleImages = [
+            // Imágenes de demostración de Unsplash
+            const demoImages = [
                 {
-                    id: '1HshMqzZvE96rZFQ3P7GQlfS8es7W9Ar5',
-                    title: 'Paisaje natural',
-                    description: 'Hermoso paisaje con montañas'
+                    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop',
+                    name: 'Montañas',
+                    description: 'Paisaje montañoso'
                 },
                 {
-                    id: '1kHk_c4eA6Ef6lLq2R1r1wz5QYt5Lp0Jy',
-                    title: 'Ciudad nocturna',
-                    description: 'Rascacielos iluminados'
+                    url: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w-800&auto=format&fit=crop',
+                    name: 'Santorini',
+                    description: 'Puesta de sol en Grecia'
                 },
                 {
-                    id: '1GzH7K4n8M3J2L1P9Q6R5T7Y8U0I9O8P7',
-                    title: 'Playa tropical',
-                    description: 'Arena blanca y agua cristalina'
+                    url: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w-800&auto=format&fit=crop',
+                    name: 'Patagonia',
+                    description: 'Torres del Paine'
                 },
                 {
-                    id: '2B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q',
-                    title: 'Bosque otoñal',
-                    description: 'Árboles con hojas coloridas'
+                    url: 'https://images.unsplash.com/photo-1505852679233-d9fd70aff56d?w-800&auto=format&fit=crop',
+                    name: 'Monte Fuji',
+                    description: 'Volcán japonés'
                 },
                 {
-                    id: '3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R',
-                    title: 'Desierto',
-                    description: 'Dunas de arena al atardecer'
+                    url: 'https://images.unsplash.com/photo-1562229128-14c05fd0d0d0?w-800&auto=format&fit=crop',
+                    name: 'Yellowstone',
+                    description: 'Parque nacional'
                 },
                 {
-                    id: '4D5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S',
-                    title: 'Aurora boreal',
-                    description: 'Luces del norte en el cielo'
-                },
-                {
-                    id: '5E6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T',
-                    title: 'Cascada',
-                    description: 'Agua cayendo entre rocas'
-                },
-                {
-                    id: '6F7G8H9I0J1K2L3M4N5O6P7Q8R9S0T1U',
-                    title: 'Jardín floral',
-                    description: 'Flores de colores vibrantes'
+                    url: 'https://images.unsplash.com/photo-1517868670896-0c17c0404281?w-800&auto=format&fit=crop',
+                    name: 'Petra',
+                    description: 'Ciudad del desierto'
                 }
             ];
             
-            // Crear elementos de galería para cada imagen
-            sampleImages.forEach((img, index) => {
-                const imageUrl = `https://drive.google.com/uc?id=${img.id}`;
-                addImageToGallery(imageUrl, img.title, img.description, index + 1);
+            // Crear elementos de galería
+            demoImages.forEach((img, index) => {
+                addImageToGallery(img.url, img.name, img.description, index + 1);
             });
             
             updateImageCounter();
+            showSuccess('✓ Modo demostración activado (6 imágenes de prueba)');
             
-            // Iniciar auto-play si hay más de una imagen
-            if (sampleImages.length > 1 && !isAutoPlaying) {
+            // Iniciar auto-play
+            if (demoImages.length > 1 && !isAutoPlaying) {
                 startAutoPlay();
                 autoPlayToggle.classList.add('active');
                 autoPlayToggle.innerHTML = '<i class="fas fa-pause"></i> Detener Auto-Desplazamiento';
                 isAutoPlaying = true;
             }
+        }
+        
+        // Probar conexión con Supabase
+        async function testSupabaseConnection() {
+            showLoading(true);
+            clearMessages();
             
-            showMessage('✓ Imágenes cargadas correctamente (modo demostración)');
+            try {
+                const response = await fetch(EDGE_FUNCTION_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showSuccess('✓ Conexión con Supabase Edge Function exitosa');
+                } else {
+                    throw new Error(`Error ${response.status}`);
+                }
+            } catch (error) {
+                showError('✗ Error de conexión: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
         }
         
         // Añadir imagen a la galería
@@ -570,7 +739,7 @@
             galleryItem.innerHTML = `
                 <a href="${url}" target="_blank" class="gallery-link">
                     <img src="${url}" alt="${title}" class="gallery-img" 
-                         onerror="this.src='https://via.placeholder.com/380x280/4285F4/ffffff?text=Imagen+${number}'">
+                         onerror="this.src='https://via.placeholder.com/380x280/3ECF8E/1a1a2e?text=Imagen+${number}'">
                     <div class="gallery-overlay">
                         <h3>${title}</h3>
                         <p>${description}</p>
@@ -628,32 +797,28 @@
             loadingIndicator.style.display = show ? 'block' : 'none';
         }
         
+        // Mostrar mensaje de éxito
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+        
         // Mostrar mensaje de error
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
-        }
-        
-        // Mostrar mensaje informativo
-        function showMessage(message) {
-            errorMessage.style.background = '#E8F5E9';
-            errorMessage.style.color = '#2E7D32';
-            errorMessage.style.borderLeftColor = '#4CAF50';
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            
-            // Ocultar después de 5 segundos
             setTimeout(() => {
                 errorMessage.style.display = 'none';
-                errorMessage.style.background = '#FFEBEE';
-                errorMessage.style.color = '#D32F2F';
-                errorMessage.style.borderLeftColor = '#D32F2F';
-            }, 5000);
+            }, 10000);
         }
         
-        // Limpiar mensajes de error
-        function clearError() {
+        // Limpiar mensajes
+        function clearMessages() {
             errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
         }
         
         // Configurar arrastre con mouse
@@ -695,7 +860,10 @@
         // Configurar eventos
         function setupEventListeners() {
             // Botón para cargar imágenes
-            loadImagesBtn.addEventListener('click', getImagesFromDrive);
+            loadImagesBtn.addEventListener('click', loadImagesFromDrive);
+            
+            // Botón para probar conexión
+            testConnectionBtn.addEventListener('click', testSupabaseConnection);
             
             // Botón anterior
             prevBtn.addEventListener('click', () => {
@@ -749,8 +917,16 @@
             setupEventListeners();
             setupDragScroll();
             
+            // Verificar configuración
+            if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+                showError('⚠️ Configura tu URL y API Key de Supabase');
+                return;
+            }
+            
             // Cargar imágenes automáticamente al inicio
-            getImagesFromDrive();
+            setTimeout(() => {
+                loadImagesFromDrive();
+            }, 1000);
         }
         
         // Iniciar cuando el DOM esté listo
